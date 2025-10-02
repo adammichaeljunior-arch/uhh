@@ -32,6 +32,13 @@ pcall(function()
     channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5)
 end)
 
+-- === STATS ===
+local stats = {
+    ServersHopped = 0,
+    MessagesSent = 0,
+    PlayersLeft = 0
+}
+
 -- === CHAT HELPER ===
 local lastMessageTime = 0
 local function sendChat(msg)
@@ -41,6 +48,8 @@ local function sendChat(msg)
     end)
     if ok then
         lastMessageTime = os.time()
+        stats.MessagesSent += 1
+        updateOverlay()
     end
 end
 
@@ -52,7 +61,7 @@ overlay.ResetOnSpawn = false
 overlay.Parent = player:WaitForChild("PlayerGui")
 
 local overlayFrame = Instance.new("Frame")
-overlayFrame.Size = UDim2.new(0.35,0,0.15,0)
+overlayFrame.Size = UDim2.new(0.35,0,0.22,0)
 overlayFrame.Position = UDim2.new(0.325,0,0.05,0)
 overlayFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 overlayFrame.BorderSizePixel = 0
@@ -69,6 +78,15 @@ overlayLabel.Font = Enum.Font.Code
 overlayLabel.TextScaled = true
 overlayLabel.Text = "Initializing..."
 overlayLabel.Parent = overlayFrame
+
+-- === OVERLAY UPDATER ===
+function updateOverlay()
+    overlayLabel.Text =
+        "Account: " .. player.Name ..
+        "\nPlayers left: " .. stats.PlayersLeft ..
+        "\nServers hopped: " .. stats.ServersHopped ..
+        "\nMessages sent: " .. stats.MessagesSent
+end
 
 -- === CPU SAVER ===
 if _G.CPUSaver then
@@ -115,6 +133,8 @@ end
 local function serverHop()
     overlayLabel.Text = "Server hopping..."
     queueScript()
+    stats.ServersHopped += 1
+    updateOverlay()
 
     local success, body = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
@@ -168,7 +188,6 @@ task.spawn(function()
         if gui then
             local btn = gui:FindFirstChild("I agree", true)
             if btn and btn:IsA("TextButton") then
-                pcall(function() btn.Activated:Connect(function() end) end)
                 pcall(function() btn:Activate() end)
             end
         end
@@ -203,11 +222,14 @@ task.spawn(function()
         end
 
         local reachedPlayers = {}
+        stats.PlayersLeft = #allPlayers
+        updateOverlay()
 
         for _, target in ipairs(allPlayers) do
-            overlayLabel.Text = ("Players left: %d"):format(#allPlayers - #reachedPlayers)
+            stats.PlayersLeft = #allPlayers - #reachedPlayers
+            updateOverlay()
 
-            -- add a 3s delay before teleporting
+            -- 3s delay before teleport
             task.wait(3)
 
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
