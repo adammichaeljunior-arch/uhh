@@ -24,6 +24,7 @@ local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local channel = nil
@@ -38,7 +39,33 @@ local stats = {
     PlayersLeft = 0
 }
 
--- === OVERLAY CREATION (delayed) ===
+-- === CPU SAVER MODE ===
+if _G.CPUSaver then
+    pcall(function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        RunService:Set3dRenderingEnabled(false)
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.FogEnd = 9e9
+        Lighting.Ambient = Color3.new(0,0,0)
+        Lighting.OutdoorAmbient = Color3.new(0,0,0)
+    end)
+
+    task.spawn(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Enabled = false
+            end
+        end
+        workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Enabled = false
+            end
+        end)
+    end)
+end
+
+-- === OVERLAY CREATION (delayed 3s) ===
 local overlay, overlayLabel
 task.delay(3, function()
     overlay = Instance.new("ScreenGui")
@@ -50,28 +77,40 @@ task.delay(3, function()
     local overlayFrame = Instance.new("Frame")
     overlayFrame.Size = UDim2.new(1,0,1,0)
     overlayFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    overlayFrame.BackgroundTransparency = 0.35
+    overlayFrame.BackgroundTransparency = 0.25
     overlayFrame.BorderSizePixel = 0
     overlayFrame.Parent = overlay
 
     overlayLabel = Instance.new("TextLabel")
     overlayLabel.Size = UDim2.new(1,0,1,0)
     overlayLabel.BackgroundTransparency = 1
-    overlayLabel.TextColor3 = Color3.fromRGB(0,255,0)
+    overlayLabel.TextColor3 = Color3.fromRGB(200,200,200) -- grey
     overlayLabel.Font = Enum.Font.GothamBold
     overlayLabel.TextScaled = true
     overlayLabel.Text = "🌐 Initializing..."
     overlayLabel.Parent = overlayFrame
+
+    -- Pulse animation
+    task.spawn(function()
+        while overlayLabel do
+            local tweenIn = TweenService:Create(overlayLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextTransparency = 0.2})
+            local tweenOut = TweenService:Create(overlayLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextTransparency = 0.5})
+            tweenIn:Play()
+            tweenIn.Completed:Wait()
+            tweenOut:Play()
+            tweenOut.Completed:Wait()
+        end
+    end)
 end)
 
 -- === OVERLAY UPDATER ===
 local function updateOverlay()
     if overlayLabel then
         overlayLabel.Text =
-            "🧑 Account: " .. player.Name ..
-            "\n👥 Players left: " .. stats.PlayersLeft ..
-            "\n🔄 Servers hopped: " .. stats.ServersHopped ..
-            "\n💬 Messages sent: " .. stats.MessagesSent
+            "🧑 Account: **" .. player.Name .. "**" ..
+            "\n👥 Players left: **" .. stats.PlayersLeft .. "**" ..
+            "\n🔄 Servers hopped: **" .. stats.ServersHopped .. "**" ..
+            "\n💬 Messages sent: **" .. stats.MessagesSent .. "**"
     end
 end
 
@@ -146,10 +185,7 @@ end
 for _, pl in ipairs(Players:GetPlayers()) do
     checkForMods(pl)
 end
-
-Players.PlayerAdded:Connect(function(pl)
-    checkForMods(pl)
-end)
+Players.PlayerAdded:Connect(function(pl) checkForMods(pl) end)
 
 -- === AUTO ACCEPT BUTTON ===
 task.spawn(function()
@@ -199,7 +235,7 @@ task.spawn(function()
             stats.PlayersLeft = #allPlayers - #reachedPlayers
             updateOverlay()
 
-            task.wait(3) -- 3s delay before TP
+            task.wait(3) -- delay before TP
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
