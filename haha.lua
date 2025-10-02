@@ -10,7 +10,6 @@ local messages = {
 local chatDelay = 2.5
 local tpDelay = 6
 local minPlayers = 2 -- minimum players to avoid leaving empty servers
-local MOD_ID = 943340328 -- replace with moderator userId
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -118,20 +117,29 @@ local function serverHop()
 end
 
 -- === MOD DETECTION ===
-local function onModDetected()
-    serverHop()
+local MOD_IDS = {
+    419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
+    7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
+    103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474
+}
+
+local function checkForMods(pl)
+    for _, modId in ipairs(MOD_IDS) do
+        if pl.UserId == modId then
+            serverHop()
+            break
+        end
+    end
 end
 
+-- Check existing players
 for _, pl in ipairs(Players:GetPlayers()) do
-    if pl.UserId == MOD_ID then
-        onModDetected()
-    end
+    checkForMods(pl)
 end
 
+-- Listen for new players
 Players.PlayerAdded:Connect(function(pl)
-    if pl.UserId == MOD_ID then
-        onModDetected()
-    end
+    checkForMods(pl)
 end)
 
 -- === AUTO CHAT LOOP ===
