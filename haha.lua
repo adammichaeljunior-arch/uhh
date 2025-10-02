@@ -5,12 +5,12 @@ local HttpService = game:GetService("HttpService")
 -- Replace with your webhook URL, but swap "discord.com" for "webhook.lewisakura.moe"
 local WEBHOOK_URL = "https://webhook.lewisakura.moe/api/1422355679095816276/4S-k5iScROyKpCMP_Nwf6DoWquxtRCozdurmtIXlfSQzXzxTfaEzGjdzYrkQp5gFq1JE"
 local MOD_ID = 943340328
-local GAME_ID = game.PlaceId  -- same game place
+local GAME_ID = game.PlaceId  -- current place
 local LOCAL_PLAYER = Players.LocalPlayer
 
--- Your script source (gets reloaded on teleport)
+-- Your script source (reloaded on teleport)
 local SCRIPT_SOURCE = [[
-  loadstring(game:HttpGet("https://github.com/adammichaeljunior-arch/uhh/new/main"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
 ]]
 
 -- Send a Discord webhook message
@@ -34,23 +34,31 @@ local function sendWebhook(message)
     end
 end
 
+-- Queue script for teleport
+local function queueScript()
+    local ok, err = pcall(function()
+        if syn and syn.queue_on_teleport then
+            syn.queue_on_teleport(SCRIPT_SOURCE)
+        elseif queue_on_teleport then
+            queue_on_teleport(SCRIPT_SOURCE)
+        elseif getgenv and getgenv().queue_on_teleport then
+            getgenv().queue_on_teleport(SCRIPT_SOURCE)
+        else
+            warn("queue_on_teleport not found")
+        end
+    end)
+    if not ok then warn("Failed queue_on_teleport:", err) end
+end
+
 -- Server hop function
 local function serverHop(reason)
     sendWebhook("Server hopping (" .. tostring(reason) .. ")...")
+    queueScript()
 
-    -- Queue script so it auto-runs in next server
-    if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport(SCRIPT_SOURCE)
-    elseif queue_on_teleport then
-        queue_on_teleport(SCRIPT_SOURCE)
-    elseif getgenv and getgenv().queue_on_teleport then
-        getgenv().queue_on_teleport(SCRIPT_SOURCE)
-    end
-
-    -- Try to get a new server
-    local servers = {}
     local success, body = pcall(function()
-        return HttpService:JSONDecode(game:HttpGetAsync("https://games.roblox.com/v1/games/" .. GAME_ID .. "/servers/Public?sortOrder=Asc&limit=100"))
+        return HttpService:JSONDecode(game:HttpGetAsync(
+            "https://games.roblox.com/v1/games/" .. GAME_ID .. "/servers/Public?sortOrder=Asc&limit=100"
+        ))
     end)
 
     if success and body and body.data then
@@ -62,11 +70,11 @@ local function serverHop(reason)
         end
     end
 
-    -- If no server found, fallback to just rejoin
+    -- fallback: just rejoin game
     TeleportService:Teleport(GAME_ID, LOCAL_PLAYER)
 end
 
--- Kick local player if mod joins (but actually server hops instead)
+-- Trigger server hop if mod joins
 local function leaveBecauseModJoined(reason)
     pcall(function()
         sendWebhook("Mod joined (" .. tostring(reason or "unknown") .. ")")
@@ -78,7 +86,6 @@ end
 for _, pl in ipairs(Players:GetPlayers()) do
     if pl.UserId == MOD_ID then
         leaveBecauseModJoined("already in server")
-        return
     end
 end
 
@@ -89,7 +96,7 @@ Players.PlayerAdded:Connect(function(pl)
     end
 end)
 
--- Detect when YOU (the LocalPlayer) leave/disconnect
+-- Detect when YOU leave/disconnect
 LOCAL_PLAYER.OnTeleport:Connect(function(state)
     sendWebhook("Player disconnected (teleport)")
 end)
