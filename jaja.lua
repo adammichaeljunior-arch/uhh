@@ -3,7 +3,7 @@ local messages = {
     "join /Εnvyy for fansignss",
     "join /Εnvyy for emommys",
     "bored? hop in /Εnvyy",
-    "THEYRE WHIMPERING IN VC LOL /envyy",
+    "THEYRE WHIMPERING IN VC LOL /Εnvyy",
     "join /Εnvyy 4 nitro",
     "/Εnvyy 4 headless",
     "goon in /Εnvyy",
