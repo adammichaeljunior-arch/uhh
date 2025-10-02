@@ -1,6 +1,9 @@
 -- === SETTINGS ===
 local messages = {
     "join /envyy for fansignss",
+    "emommys in /envyy",
+    "join 4 egirls in /envyy",
+    "chat with us in /envyy",
     "join /envyy 4 nitro",
     "/envyy 4 headless",
     "goon in /envyy",
