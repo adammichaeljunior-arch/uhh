@@ -8,8 +8,8 @@ local messages = {
     "join /envyy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 8.5
-local minPlayers = 2 -- minimal players in server to start
+local tpDelay = 4 -- teleport per player
+local minPlayers = 2
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -27,7 +27,6 @@ local TeleportService = game:GetService("TeleportService")
 
 local player = Players.LocalPlayer
 local channel = TextChatService.TextChannels:WaitForChild("RBXGeneral")
-local MOD_ID = 943340328 -- change this to your mod's ID
 
 -- === CHAT HELPER ===
 local lastMessageTime = 0
@@ -40,7 +39,6 @@ local function sendChat(msg)
     else
         warn("Chat error/rate limit:", err)
     end
-    return ok, err
 end
 
 -- === AUTO CHAT LOOP ===
@@ -54,7 +52,30 @@ task.spawn(function()
     end
 end)
 
--- === CPU SAVER & Overlay ===
+-- === CPU SAVER / OVERLAY ===
+local gui = Instance.new("ScreenGui")
+gui.Name = "CPUSaverOverlay"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(1,0,1,0)
+frame.BackgroundColor3 = Color3.new(0,0,0)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(0.5,0,0,50)
+label.Position = UDim2.new(0.5,0,0,10)
+label.AnchorPoint = Vector2.new(0.5,0)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.new(1,1,1)
+label.TextScaled = true
+label.Text = "Players left: 0"
+label.Parent = frame
+
+-- CPU optimization
 if _G.CPUSaver then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -67,30 +88,7 @@ if _G.CPUSaver then
         Lighting.OutdoorAmbient = Color3.new(0,0,0)
     end)
 
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "CPUSaverOverlay"
-    gui.IgnoreGuiInset = true
-    gui.ResetOnSpawn = false
-    gui.Parent = player:WaitForChild("PlayerGui")
-
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.3,0,0.1,0)
-    frame.Position = UDim2.new(0.35,0,0.9,0)
-    frame.BackgroundColor3 = Color3.new(0,0,0)
-    frame.BackgroundTransparency = 0.3
-    frame.BorderSizePixel = 0
-    frame.Parent = gui
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1,0,1,0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1,1,1)
-    label.TextScaled = true
-    label.Font = Enum.Font.SourceSansBold
-    label.Text = "Players left: 0"
-    label.Parent = frame
-
-    -- Extra CPU: disable particles
+    -- disable particles/trails
     task.spawn(function()
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("ParticleEmitter") or v:IsA("Trail") then
@@ -105,47 +103,20 @@ if _G.CPUSaver then
     end)
 end
 
--- === AUTO JUMP (anti seat/AFK) ===
-task.spawn(function()
-    while true do
-        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-            player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-        task.wait(15)
-    end
-end)
-
--- === MODERATOR DETECTION & SERVER HOP ===
+-- === SERVER HOP FUNCTION ===
 local function serverHop(reason)
     label.Text = "Server hopping..."
-    task.wait(2)
+    task.wait(1)
     if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua'))()")
+        syn.queue_on_teleport(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))
     end
     TeleportService:Teleport(game.PlaceId, player)
 end
 
-local function onMod(reason)
-    serverHop("Moderator detected: "..reason)
-end
-
--- Check existing players
-for _, pl in ipairs(Players:GetPlayers()) do
-    if pl.UserId == MOD_ID then
-        onMod("already in server")
-    end
-end
-
--- Check future joins
-Players.PlayerAdded:Connect(function(pl)
-    if pl.UserId == MOD_ID then
-        onMod("joined")
-    end
-end)
-
--- === AUTO TELEPORT + EMOTE with proper countdown ===
+-- === AUTO TELEPORT + EMOTE WITH COUNTDOWN ===
 task.spawn(function()
     while _G.AutoTP do
+        -- create target list once
         local allPlayers = Players:GetPlayers()
         local targets = {}
         for _, pl in ipairs(allPlayers) do
@@ -154,24 +125,19 @@ task.spawn(function()
             end
         end
 
+        label.Text = "Players left: "..#targets
+
         if #targets < minPlayers then
             game:Shutdown()
             return
         end
 
-        while #targets > 0 do
-            local target = targets[1]
+        for i, target in ipairs(targets) do
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             local targetHRP = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
             if hrp and targetHRP then
                 hrp.CFrame = CFrame.new(targetHRP.Position + targetHRP.CFrame.LookVector*3, targetHRP.Position)
             end
-
-            -- Remove player from list
-            table.remove(targets,1)
-
-            -- Update overlay countdown
-            label.Text = "Players left: "..#targets
 
             -- Emote spam
             if _G.AutoEmote then
@@ -181,11 +147,23 @@ task.spawn(function()
                 end
             end
 
+            -- remove from counter and update overlay
+            label.Text = "Players left: "..(#targets - i)
             task.wait(tpDelay)
         end
 
-        -- All players reached, hop
+        -- Hop after all players
         serverHop("All players reached")
         break
+    end
+end)
+
+-- === AUTO JUMP (anti-AFK) ===
+task.spawn(function()
+    while true do
+        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+        task.wait(15)
     end
 end)
