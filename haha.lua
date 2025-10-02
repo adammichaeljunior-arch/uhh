@@ -1,11 +1,11 @@
 -- === SETTINGS ===
 local messages = {
-    "join /Εnvyy for fansignss",
-    "join /Εnvyy 4 nitro",
-    "/Εnvyy 4 headless",
-    "goon in /Εnvyy",
-    "join /Εnvyy 4 eheadd",
-    "join /Εnvyy for friends"
+    "join /envyy for fansignss",
+    "join /envyy 4 nitro",
+    "/envyy 4 headless",
+    "goon in /envyy",
+    "join /envyy 4 eheadd",
+    "join /envyy for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 6
