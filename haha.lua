@@ -8,7 +8,7 @@ local messages = {
     "/envyy 4 headless",
     "goon in /envyy",
     "join /envyy 4 eheadd",
-    "join /envyy for friends"
+    "join /envyy for ROBUX"
 }
 local chatDelay = 2.5
 local tpDelay = 6
