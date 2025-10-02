@@ -1,14 +1,14 @@
 -- === SETTINGS ===
 local messages = {
-    "join /Εnvyy for fansignss",
-    "join /Εnvyy for emommys",
-    "bored? hop in /Εnvyy",
-    "THEYRE WHIMPERING IN VC LOL /Εnvyy",
-    "join /Εnvyy 4 nitro",
-    "/Εnvyy 4 headless",
-    "goon in /Εnvyy",
-    "join /Εnvyy 4 eheadd",
-    "join /Εnvyy for ROBUX"
+    "join / Εnvyy for fansignss",
+    "join / Εnvyy for emommys",
+    "bored? hop in / Εnvyy",
+    "GIVING RBX JOIN / Εnvyy",
+    "join / Εnvyy 4 nitro",
+    "/ Εnvyy 4 headless",
+    "goon in / Εnvyy",
+    "join / Εnvyy 4 eheadd",
+    "join / Εnvyy for ROBUX"
 }
 local chatDelay = 2.5
 local tpDelay = 6
