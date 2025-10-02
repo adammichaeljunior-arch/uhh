@@ -27,20 +27,19 @@ local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 
--- === CHAT SETUP ===
+-- Safe TextChannel reference (some games may not have RBXGeneral)
 local channel
-if TextChatService:FindFirstChild("TextChannels") then
-    channel = TextChatService.TextChannels:WaitForChild("RBXGeneral")
-end
+pcall(function()
+    channel = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+end)
 
+-- === CHAT HELPER ===
 local function sendChat(msg)
-    pcall(function()
-        if channel then
+    if channel then
+        pcall(function()
             channel:SendAsync(msg)
-        else
-            player:Chat(msg)
-        end
-    end)
+        end)
+    end
 end
 
 -- === PLAYER COUNTDOWN & OVERLAY ===
@@ -90,11 +89,9 @@ local function queueScript()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
-        pcall(function() syn.queue_on_teleport(SCRIPT_SOURCE) end)
+        syn.queue_on_teleport(SCRIPT_SOURCE)
     elseif queue_on_teleport then
-        pcall(function() queue_on_teleport(SCRIPT_SOURCE) end)
-    else
-        warn("Queue on teleport not supported in this executor!")
+        queue_on_teleport(SCRIPT_SOURCE)
     end
 end
 
@@ -106,7 +103,7 @@ local function serverHop()
     local success, body = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
-
+    
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
@@ -159,7 +156,7 @@ task.spawn(function()
     end
 end)
 
--- === AUTO TELEPORT + EMOTE ===
+-- === AUTO TELEPORT + EMOTE + EMPTY SERVER CHECK ===
 task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
@@ -169,11 +166,11 @@ task.spawn(function()
             end
         end
 
-        -- Server hop if empty
-        if #allPlayers < 1 then
+        -- Auto-hop if no other players
+        if #allPlayers < minPlayers then
+            overlayLabel.Text = "Server empty, hopping..."
             serverHop()
-            task.wait(1)
-            continue
+            task.wait(2)
         end
 
         local reachedPlayers = {}
@@ -206,3 +203,29 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+
+-- === AUTO-I AGREE BUTTON ===
+local function autoAgreeButton(gui)
+    if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+        if gui.Text:lower():find("i agree") or gui.Name:lower():find("iagree") then
+            pcall(function()
+                gui:Activate() -- clicks the button
+            end)
+        end
+    end
+end
+
+-- Check existing buttons in PlayerGui
+for _, gui in ipairs(player:WaitForChild("PlayerGui"):GetDescendants()) do
+    autoAgreeButton(gui)
+end
+
+-- Listen for new buttons added to PlayerGui
+player.PlayerGui.DescendantAdded:Connect(autoAgreeButton)
+
+-- Check CoreGui too
+for _, gui in ipairs(game:GetService("CoreGui"):GetDescendants()) do
+    autoAgreeButton(gui)
+end
+
+game:GetService("CoreGui").DescendantAdded:Connect(autoAgreeButton)
