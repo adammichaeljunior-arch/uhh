@@ -8,62 +8,102 @@ local messages = {
     "join /envyy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 6
-local emoteDelay = 3
-
--- === TOGGLES ===
-_G.AutoSay = true
-_G.AutoTP = true
-_G.AutoEmote = true
-_G.CPUSaver = true
+local tpDelay = 6       -- seconds near each player
+local emoteDelay = 3    -- /e point spam
+local MOD_ID = 943340328
+local CPU_SAVE = true
 
 -- === SERVICES ===
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
-local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
 local player = Players.LocalPlayer
 local channel = TextChatService.TextChannels:WaitForChild("RBXGeneral")
 
--- === CHAT HELPER ===
-local lastMessageTime = 0
+-- === UTILITY FUNCTIONS ===
 local function sendChat(msg)
-    local ok, err = pcall(function()
+    pcall(function()
         channel:SendAsync(msg)
     end)
-    if ok then
-        lastMessageTime = os.time()
-    else
-        warn("Chat error/rate limit:", err)
-    end
-    return ok, err
 end
 
--- === AUTO CHAT LOOP ===
-task.spawn(function()
-    local i = 1
-    while _G.AutoSay do
-        sendChat(messages[i])
-        i = i + 1
-        if i > #messages then i = 1 end
-        task.wait(chatDelay)
+local function queueScript()
+    local SCRIPT_SOURCE = [[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
+    ]]
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(SCRIPT_SOURCE)
+    elseif queue_on_teleport then
+        queue_on_teleport(SCRIPT_SOURCE)
     end
-end)
+end
+
+local function serverHop(reason)
+    overlayLabel.Text = "Server hopping..."
+    queueScript()
+    
+    local ok, body = pcall(function()
+        local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+        return game:HttpGet(url)
+    end)
+    
+    if ok then
+        local data = game:GetService("HttpService"):JSONDecode(body)
+        if data and data.data then
+            for _, s in ipairs(data.data) do
+                if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, player)
+                    return
+                end
+            end
+        end
+    end
+    
+    TeleportService:Teleport(game.PlaceId, player)
+end
+
+-- === OVERLAY ===
+local playerGui = player:WaitForChild("PlayerGui",10)
+if playerGui then
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "Overlay"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.Parent = playerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.25,0,0.1,0)
+    frame.Position = UDim2.new(0.01,0,0.01,0)
+    frame.BackgroundColor3 = Color3.new(0,0,0)
+    frame.BackgroundTransparency = 0.2
+    frame.BorderSizePixel = 0
+    frame.Parent = gui
+
+    overlayLabel = Instance.new("TextLabel")
+    overlayLabel.Size = UDim2.new(1,0,1,0)
+    overlayLabel.BackgroundTransparency = 1
+    overlayLabel.TextColor3 = Color3.new(1,1,1)
+    overlayLabel.TextScaled = true
+    overlayLabel.Text = "Initializing..."
+    overlayLabel.Parent = frame
+else
+    warn("PlayerGui not found, overlay disabled")
+end
 
 -- === CPU SAVER ===
-if _G.CPUSaver then
+if CPU_SAVE then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
         RunService:Set3dRenderingEnabled(false)
-        UserSettings():GetService("UserGameSettings").MasterVolume = 0
         Lighting.GlobalShadows = false
         Lighting.Brightness = 0
         Lighting.FogEnd = 9e9
         Lighting.Ambient = Color3.new(0,0,0)
         Lighting.OutdoorAmbient = Color3.new(0,0,0)
     end)
-    -- disable particles/trails
+
     task.spawn(function()
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("ParticleEmitter") or v:IsA("Trail") then
@@ -78,85 +118,65 @@ if _G.CPUSaver then
     end)
 end
 
--- === OVERLAY ===
-local gui = Instance.new("ScreenGui")
-gui.Name = "Overlay"
-gui.IgnoreGuiInset = true
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0.25,0,0.1,0)
-frame.Position = UDim2.new(0.01,0,0.01,0)
-frame.BackgroundColor3 = Color3.new(0,0,0)
-frame.BackgroundTransparency = 0.2
-frame.BorderSizePixel = 0
-frame.Parent = gui
-
-local label = Instance.new("TextLabel")
-label.Size = UDim2.new(1,0,1,0)
-label.BackgroundTransparency = 1
-label.TextColor3 = Color3.new(1,1,1)
-label.TextScaled = true
-label.Text = "Initializing..."
-label.Parent = frame
-
--- === AUTO TELEPORT + EMOTE + PLAYER COUNT ===
-task.spawn(function()
-    while true do
-        -- get all current players except yourself
-        local targets = {}
-        for _, pl in ipairs(Players:GetPlayers()) do
-            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-                table.insert(targets, pl)
-            end
-        end
-
-        local remaining = #targets
-        for i, target in ipairs(targets) do
-            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and
-               player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = player.Character.HumanoidRootPart
-                local targetPos = target.Character.HumanoidRootPart.Position
-                hrp.CFrame = CFrame.new(targetPos + target.Character.HumanoidRootPart.CFrame.LookVector * 3, targetPos)
-            end
-
-            -- emote loop
-            if _G.AutoEmote then
-                local emotes = math.floor(tpDelay / emoteDelay)
-                for _ = 1, emotes do
-                    sendChat("/e point")
-                    task.wait(emoteDelay)
-                end
-            else
-                task.wait(tpDelay)
-            end
-
-            remaining = remaining - 1
-            label.Text = "Players left: "..remaining
-        end
-
-        -- done all players
-        label.Text = "Server hopping..."
-        task.wait(1)
-
-        -- teleport to new server
-        if syn and syn.queue_on_teleport then
-            syn.queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua'))()")
-        end
-
-        local TeleportService = game:GetService("TeleportService")
-        TeleportService:Teleport(game.PlaceId, player)
-        break
+-- === CHECK FOR MODERATOR ===
+for _, pl in ipairs(Players:GetPlayers()) do
+    if pl.UserId == MOD_ID then
+        serverHop("mod in server")
+    end
+end
+Players.PlayerAdded:Connect(function(pl)
+    if pl.UserId == MOD_ID then
+        serverHop("mod joined")
     end
 end)
 
--- === AUTO JUMP ===
+-- === AUTO CHAT ===
 task.spawn(function()
+    local i = 1
     while true do
-        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-            player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-        task.wait(15)
+        sendChat(messages[i])
+        i = i + 1
+        if i > #messages then i = 1 end
+        task.wait(chatDelay)
     end
+end)
+
+-- === PLAYER TP + EMOTE ===
+task.spawn(function()
+    local unvisited = {}
+    for _, pl in ipairs(Players:GetPlayers()) do
+        if pl ~= player then
+            table.insert(unvisited, pl)
+        end
+    end
+    
+    while #unvisited > 0 do
+        local target = table.remove(unvisited,1)
+        if overlayLabel then
+            overlayLabel.Text = string.format("Account: %s\nPlayers left: %d", player.Name, #unvisited)
+        end
+
+        if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and
+           player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local targetPos = target.Character.HumanoidRootPart.Position
+            hrp.CFrame = CFrame.new(targetPos + target.Character.HumanoidRootPart.CFrame.LookVector*3, targetPos)
+        end
+
+        -- Emote spam while near
+        local elapsed = 0
+        while elapsed < tpDelay do
+            sendChat("/e point")
+            task.wait(emoteDelay)
+            elapsed = elapsed + emoteDelay
+        end
+    end
+
+    if overlayLabel then
+        overlayLabel.Text = "Server hopping..."
+    end
+
+    task.wait(1)
+    queueScript()
+    TeleportService:Teleport(game.PlaceId, player)
 end)
