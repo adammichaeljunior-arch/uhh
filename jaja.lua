@@ -1,11 +1,11 @@
 -- === SETTINGS ===
 local messages = {
-    "join /envyy for fansignss",
-    "join /envyy 4 nitro",
-    "/envyy 4 headless",
-    "goon in /envyy",
-    "join /envyy 4 eheadd",
-    "join /envyy for friends"
+    "join /Εnvyy for fansignss",
+    "join /Εnvyy 4 nitro",
+    "/Εnvyy 4 headless",
+    "goon in /Εnvyy",
+    "join /Εnvyy 4 eheadd",
+    "join /Εnvyy for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 6
@@ -16,7 +16,6 @@ _G.AutoSay = true
 _G.AutoTP = true
 _G.AutoEmote = true
 _G.CPUSaver = true
-_G.AutoAcceptButtons = true
 
 -- === SERVICES ===
 local Players = game:GetService("Players")
@@ -25,26 +24,22 @@ local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local CoreGuiService = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
 
+-- Safe TextChannel reference (some games may not have RBXGeneral)
+local channel
+pcall(function()
+    channel = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+end)
+
 -- === CHAT HELPER ===
-local lastMessageTime = 0
 local function sendChat(msg)
-    local success, err = pcall(function()
-        if TextChatService:FindFirstChild("TextChannels") then
-            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
-            if channel then
-                channel:SendAsync(msg)
-            else
-                player:Chat(msg)
-            end
-        else
-            player:Chat(msg)
-        end
-    end)
-    if success then lastMessageTime = os.time() end
+    if channel then
+        pcall(function()
+            channel:SendAsync(msg)
+        end)
+    end
 end
 
 -- === PLAYER COUNTDOWN & OVERLAY ===
@@ -93,13 +88,11 @@ local function queueScript()
     local SCRIPT_SOURCE = [[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
     ]]
-    pcall(function()
-        if syn and syn.queue_on_teleport then
-            syn.queue_on_teleport(SCRIPT_SOURCE)
-        elseif queue_on_teleport then
-            queue_on_teleport(SCRIPT_SOURCE)
-        end
-    end)
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(SCRIPT_SOURCE)
+    elseif queue_on_teleport then
+        queue_on_teleport(SCRIPT_SOURCE)
+    end
 end
 
 -- === SERVER HOP ===
@@ -110,7 +103,7 @@ local function serverHop()
     local success, body = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
-
+    
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
@@ -126,7 +119,7 @@ local function serverHop()
     TeleportService:Teleport(game.PlaceId, player)
 end
 
--- === MOD DETECTION & EMPTY SERVER CHECK ===
+-- === MOD DETECTION ===
 local MOD_IDS = {
     419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
     7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
@@ -142,17 +135,10 @@ local function checkForMods(pl)
     end
 end
 
-local function checkServer()
-    if #Players:GetPlayers() < 1 then
-        serverHop()
-    end
-end
-
--- Initial check
+-- Check existing players
 for _, pl in ipairs(Players:GetPlayers()) do
     checkForMods(pl)
 end
-checkServer()
 
 -- Listen for new players
 Players.PlayerAdded:Connect(function(pl)
@@ -170,7 +156,7 @@ task.spawn(function()
     end
 end)
 
--- === AUTO TELEPORT + EMOTE ===
+-- === AUTO TELEPORT + EMOTE + EMPTY SERVER CHECK ===
 task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
@@ -178,6 +164,13 @@ task.spawn(function()
             if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
                 table.insert(allPlayers, pl)
             end
+        end
+
+        -- Auto-hop if no other players
+        if #allPlayers < minPlayers then
+            overlayLabel.Text = "Server empty, hopping..."
+            serverHop()
+            task.wait(2)
         end
 
         local reachedPlayers = {}
@@ -211,20 +204,28 @@ task.spawn(function()
     end
 end)
 
--- === AUTO ACCEPT BUTTONS ("I Agree") ===
-if _G.AutoAcceptButtons then
-    task.spawn(function()
-        while true do
-            local agreeButton = nil
+-- === AUTO-I AGREE BUTTON ===
+local function autoAgreeButton(gui)
+    if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+        if gui.Text:lower():find("i agree") or gui.Name:lower():find("iagree") then
             pcall(function()
-                agreeButton = CoreGuiService:FindFirstChildWhichIsA("ScreenGui", true):FindFirstChild("I Agree", true)
+                gui:Activate() -- clicks the button
             end)
-            if agreeButton and agreeButton:IsA("TextButton") then
-                pcall(function()
-                    agreeButton:Activate()
-                end)
-            end
-            task.wait(1)
         end
-    end)
+    end
 end
+
+-- Check existing buttons in PlayerGui
+for _, gui in ipairs(player:WaitForChild("PlayerGui"):GetDescendants()) do
+    autoAgreeButton(gui)
+end
+
+-- Listen for new buttons added to PlayerGui
+player.PlayerGui.DescendantAdded:Connect(autoAgreeButton)
+
+-- Check CoreGui too
+for _, gui in ipairs(game:GetService("CoreGui"):GetDescendants()) do
+    autoAgreeButton(gui)
+end
+
+game:GetService("CoreGui").DescendantAdded:Connect(autoAgreeButton)
