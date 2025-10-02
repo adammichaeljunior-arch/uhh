@@ -6,7 +6,13 @@ local HttpService = game:GetService("HttpService")
 local WEBHOOK_URL = "https://webhook.lewisakura.moe/api/1422355679095816276/4S-k5iScROyKpCMP_Nwf6DoWquxtRCozdurmtIXlfSQzXzxTfaEzGjdzYrkQp5gFq1JE"
 local MOD_ID = 943340328
 local GAME_ID = game.PlaceId  -- current place
+
+-- Wait for LocalPlayer to exist (robust if script runs very early)
 local LOCAL_PLAYER = Players.LocalPlayer
+if not LOCAL_PLAYER then
+    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+    LOCAL_PLAYER = Players.LocalPlayer
+end
 
 -- Your script source (reloaded on teleport)
 local SCRIPT_SOURCE = [[
@@ -16,7 +22,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arc
 -- Send a Discord webhook message
 local function sendWebhook(message)
     local payload = {
-        content = "@everyone\n" .. message
+        content = "@everyone\n" .. tostring(message)
     }
 
     local success, response = pcall(function()
@@ -34,20 +40,26 @@ local function sendWebhook(message)
     end
 end
 
--- Queue script for teleport
+-- Queue script for teleport (safe checks)
 local function queueScript()
     local ok, err = pcall(function()
-        if syn and syn.queue_on_teleport then
+        if type(syn) == "table" and type(syn.queue_on_teleport) == "function" then
             syn.queue_on_teleport(SCRIPT_SOURCE)
-        elseif queue_on_teleport then
-            queue_on_teleport(SCRIPT_SOURCE)
-        elseif getgenv and getgenv().queue_on_teleport then
-            getgenv().queue_on_teleport(SCRIPT_SOURCE)
-        else
-            warn("queue_on_teleport not found")
+            return
         end
+        if type(queue_on_teleport) == "function" then
+            queue_on_teleport(SCRIPT_SOURCE)
+            return
+        end
+        if type(getgenv) == "function" and type(getgenv().queue_on_teleport) == "function" then
+            getgenv().queue_on_teleport(SCRIPT_SOURCE)
+            return
+        end
+        warn("queue_on_teleport not found; script won't auto-run after teleport unless your executor provides it.")
     end)
-    if not ok then warn("Failed queue_on_teleport:", err) end
+    if not ok then
+        warn("Failed queue_on_teleport:", err)
+    end
 end
 
 -- Server hop function
@@ -56,21 +68,21 @@ local function serverHop(reason)
     queueScript()
 
     local success, body = pcall(function()
-        return HttpService:JSONDecode(game:HttpGetAsync(
-            "https://games.roblox.com/v1/games/" .. GAME_ID .. "/servers/Public?sortOrder=Asc&limit=100"
-        ))
+        local url = "https://games.roblox.com/v1/games/" .. tostring(GAME_ID) .. "/servers/Public?sortOrder=Asc&limit=100"
+        local raw = game:HttpGetAsync(url)
+        return HttpService:JSONDecode(raw)
     end)
 
-    if success and body and body.data then
+    if success and body and type(body.data) == "table" then
         for _, s in ipairs(body.data) do
-            if s.playing < s.maxPlayers and s.id ~= game.JobId then
+            if type(s) == "table" and s.playing < s.maxPlayers and tostring(s.id) ~= tostring(game.JobId) then
                 TeleportService:TeleportToPlaceInstance(GAME_ID, s.id, LOCAL_PLAYER)
                 return
             end
         end
     end
 
-    -- fallback: just rejoin game
+    -- fallback: rejoin same place
     TeleportService:Teleport(GAME_ID, LOCAL_PLAYER)
 end
 
@@ -96,17 +108,24 @@ Players.PlayerAdded:Connect(function(pl)
     end
 end)
 
--- Detect when YOU leave/disconnect
-LOCAL_PLAYER.OnTeleport:Connect(function(state)
-    sendWebhook("Player disconnected (teleport)")
-end)
+-- Detect when YOU leave/disconnect (client-side)
+if LOCAL_PLAYER then
+    if LOCAL_PLAYER.OnTeleport then
+        LOCAL_PLAYER.OnTeleport:Connect(function(state)
+            sendWebhook("Player disconnected (teleport) - state: " .. tostring(state))
+        end)
+    end
 
-game:BindToClose(function()
-    sendWebhook("Player disconnected (shutdown)")
-end)
+    LOCAL_PLAYER.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            sendWebhook("Player disconnected (left game)")
+        end
+    end)
+end
 
-LOCAL_PLAYER.AncestryChanged:Connect(function(_, parent)
-    if not parent then
-        sendWebhook("Player disconnected (left game)")
+-- OPTIONAL: remove or comment out this heartbeat if it spams your webhook
+spawn(function()
+    while wait(60) do
+        sendWebhook("Script still active in server: " .. tostring(game.JobId))
     end
 end)
