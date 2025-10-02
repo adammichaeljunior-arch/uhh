@@ -20,99 +20,55 @@ _G.CPUSaver = true
 -- === SERVICES ===
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
+local GuiService = game:GetService("GuiService")
 
 local player = Players.LocalPlayer
+local channel = nil
+pcall(function()
+    channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5)
+end)
 
--- === CHAT HELPER (supports old/new chat) ===
+-- === CHAT HELPER ===
 local lastMessageTime = 0
 local function sendChat(msg)
-    local ok = false
-    pcall(function()
-        local tcs = game:GetService("TextChatService")
-        if tcs:FindFirstChild("TextChannels") and tcs.TextChannels:FindFirstChild("RBXGeneral") then
-            tcs.TextChannels.RBXGeneral:SendAsync(msg)
-            ok = true
-        else
-            player:Chat(msg)
-            ok = true
-        end
+    if not channel then return end
+    local ok, _ = pcall(function()
+        channel:SendAsync(msg)
     end)
     if ok then
         lastMessageTime = os.time()
     end
 end
 
--- === FANCY UI OVERLAY ===
+-- === PLAYER COUNTDOWN & OVERLAY ===
 local overlay = Instance.new("ScreenGui")
-overlay.Name = "FancyOverlay"
+overlay.Name = "PlayerOverlay"
 overlay.IgnoreGuiInset = true
 overlay.ResetOnSpawn = false
 overlay.Parent = player:WaitForChild("PlayerGui")
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0.3, 0, 0.22, 0)
-mainFrame.Position = UDim2.new(0.35, 0, 0.05, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BackgroundTransparency = 0.15
-mainFrame.Parent = overlay
+local overlayFrame = Instance.new("Frame")
+overlayFrame.Size = UDim2.new(0.35,0,0.15,0)
+overlayFrame.Position = UDim2.new(0.325,0,0.05,0)
+overlayFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+overlayFrame.BorderSizePixel = 0
+overlayFrame.Parent = overlay
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = mainFrame
+local uicorner = Instance.new("UICorner", overlayFrame)
+uicorner.CornerRadius = UDim.new(0,12)
 
-local stroke = Instance.new("UIStroke")
-stroke.Thickness = 2
-stroke.Color = Color3.fromRGB(255, 255, 255)
-stroke.Parent = mainFrame
-
-local function createLabel(name, order)
-    local lbl = Instance.new("TextLabel")
-    lbl.Name = name
-    lbl.Size = UDim2.new(1, -10, 0, 22)
-    lbl.Position = UDim2.new(0, 5, 0, (order-1)*24 + 5)
-    lbl.BackgroundTransparency = 1
-    lbl.TextColor3 = Color3.fromRGB(255,255,255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.TextSize = 16
-    lbl.Font = Enum.Font.GothamBold
-    lbl.Text = name..": ..."
-    lbl.Parent = mainFrame
-    return lbl
-end
-
-local lblAccount = createLabel("Account", 1)
-local lblPlayers = createLabel("PlayersLeft", 2)
-local lblStatus = createLabel("Status", 3)
-local lblMods = createLabel("Mods", 4)
-local lblServer = createLabel("ServerID", 5)
-
-local function setStatus(txt)
-    lblStatus.Text = "Status: " .. txt
-end
-
-local function setModsDetected(flag)
-    if flag then
-        lblMods.Text = "Mods: YES ⚠️"
-        lblMods.TextColor3 = Color3.fromRGB(255,0,0)
-    else
-        lblMods.Text = "Mods: NO"
-        lblMods.TextColor3 = Color3.fromRGB(0,255,0)
-    end
-end
-
-task.spawn(function()
-    while true do
-        pcall(function()
-            lblAccount.Text = "Account: " .. player.Name
-            lblPlayers.Text = "Players Left: " .. math.max(0, #Players:GetPlayers()-1)
-            lblServer.Text = "ServerID: " .. string.sub(game.JobId,1,8)
-        end)
-        task.wait(1)
-    end
-end)
+local overlayLabel = Instance.new("TextLabel")
+overlayLabel.Size = UDim2.new(1,0,1,0)
+overlayLabel.BackgroundTransparency = 1
+overlayLabel.TextColor3 = Color3.fromRGB(0,255,0)
+overlayLabel.Font = Enum.Font.Code
+overlayLabel.TextScaled = true
+overlayLabel.Text = "Initializing..."
+overlayLabel.Parent = overlayFrame
 
 -- === CPU SAVER ===
 if _G.CPUSaver then
@@ -144,19 +100,20 @@ local function queueScript()
     local SCRIPT_SOURCE = [[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
     ]]
-    pcall(function()
-        task.wait(0.2)
-        if syn and syn.queue_on_teleport then
-            syn.queue_on_teleport(SCRIPT_SOURCE)
-        elseif queue_on_teleport then
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(SCRIPT_SOURCE)
+    elseif queue_on_teleport then
+        queue_on_teleport(SCRIPT_SOURCE)
+    elseif game:GetService("TeleportService").OnTeleport then
+        game:GetService("TeleportService").OnTeleport:Connect(function()
             queue_on_teleport(SCRIPT_SOURCE)
-        end
-    end)
+        end)
+    end
 end
 
 -- === SERVER HOP ===
 local function serverHop()
-    setStatus("Server hopping...")
+    overlayLabel.Text = "Server hopping..."
     queueScript()
 
     local success, body = pcall(function()
@@ -167,7 +124,7 @@ local function serverHop()
         local data = HttpService:JSONDecode(body)
         if data and data.data then
             for _, server in ipairs(data.data) do
-                if server.playing > 1 and server.playing < server.maxPlayers and server.id ~= game.JobId then
+                if server.playing >= minPlayers and server.playing < server.maxPlayers and server.id ~= game.JobId then
                     TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
                     return
                 end
@@ -188,29 +145,46 @@ local MOD_IDS = {
 local function checkForMods(pl)
     for _, modId in ipairs(MOD_IDS) do
         if pl.UserId == modId then
-            setModsDetected(true)
             serverHop()
             break
         end
     end
 end
 
+-- Check existing players
 for _, pl in ipairs(Players:GetPlayers()) do
     checkForMods(pl)
 end
 
+-- Listen for new players
 Players.PlayerAdded:Connect(function(pl)
     checkForMods(pl)
+end)
+
+-- === AUTO ACCEPT BUTTON ===
+task.spawn(function()
+    while task.wait(1) do
+        local gui = player:FindFirstChildOfClass("PlayerGui")
+        if gui then
+            local btn = gui:FindFirstChild("I agree", true)
+            if btn and btn:IsA("TextButton") then
+                pcall(function() btn.Activated:Connect(function() end) end)
+                pcall(function() btn:Activate() end)
+            end
+        end
+    end
 end)
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
     local i = 1
+    task.wait(4) -- 4s delay before first message
     while _G.AutoSay do
         sendChat(messages[i])
         i = i + 1
         if i > #messages then i = 1 end
-        task.wait(chatDelay)
+        local randomDelay = chatDelay + math.random()
+        task.wait(randomDelay)
     end
 end)
 
@@ -225,30 +199,28 @@ task.spawn(function()
         end
 
         if #allPlayers < minPlayers then
-            setStatus("Too few players, hopping...")
             serverHop()
-            return
         end
 
         local reachedPlayers = {}
 
         for _, target in ipairs(allPlayers) do
-            setStatus("Teleporting to " .. target.Name)
-            lblPlayers.Text = ("Players Left: %d"):format(#allPlayers - #reachedPlayers)
-            
+            overlayLabel.Text = ("Players left: %d"):format(#allPlayers - #reachedPlayers)
+
+            -- add a 3s delay before teleporting
+            task.wait(3)
+
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
-                    hrp.CFrame = CFrame.new(
-                        target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3,
-                        target.Character.HumanoidRootPart.Position
-                    )
+                    hrp.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3, target.Character.HumanoidRootPart.Position)
                 end
             end
 
             if _G.AutoEmote then
                 task.spawn(function()
-                    for _ = 1, math.floor(tpDelay / 0.5) do
+                    local emotes = math.floor(tpDelay / 0.5)
+                    for _ = 1, emotes do
                         sendChat("/e point")
                         task.wait(0.5)
                     end
@@ -259,7 +231,7 @@ task.spawn(function()
             task.wait(tpDelay)
         end
 
-        setStatus("Finished, hopping...")
+        overlayLabel.Text = "Server hopping..."
         serverHop()
         task.wait(1)
     end
