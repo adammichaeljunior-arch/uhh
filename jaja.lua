@@ -10,7 +10,7 @@ local messages = {
     "join / Εnvyy 4 eheadd",
     "join / Εnvyy for ROBUX"
 }
-local chatDelay = 2.5
+local chatDelay = 3.5
 local tpDelay = 6
 local minPlayers = 2 -- minimum players to avoid leaving empty servers
 
