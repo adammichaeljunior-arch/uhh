@@ -8,8 +8,8 @@ local messages = {
     "join /envyy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 4 -- teleport per player
-local minPlayers = 2
+local tpDelay = 6
+local emoteDelay = 3
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -23,8 +23,6 @@ local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
-local TeleportService = game:GetService("TeleportService")
-
 local player = Players.LocalPlayer
 local channel = TextChatService.TextChannels:WaitForChild("RBXGeneral")
 
@@ -39,6 +37,7 @@ local function sendChat(msg)
     else
         warn("Chat error/rate limit:", err)
     end
+    return ok, err
 end
 
 -- === AUTO CHAT LOOP ===
@@ -52,30 +51,7 @@ task.spawn(function()
     end
 end)
 
--- === CPU SAVER / OVERLAY ===
-local gui = Instance.new("ScreenGui")
-gui.Name = "CPUSaverOverlay"
-gui.IgnoreGuiInset = true
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(1,0,1,0)
-frame.BackgroundColor3 = Color3.new(0,0,0)
-frame.BorderSizePixel = 0
-frame.Parent = gui
-
-local label = Instance.new("TextLabel")
-label.Size = UDim2.new(0.5,0,0,50)
-label.Position = UDim2.new(0.5,0,0,10)
-label.AnchorPoint = Vector2.new(0.5,0)
-label.BackgroundTransparency = 1
-label.TextColor3 = Color3.new(1,1,1)
-label.TextScaled = true
-label.Text = "Players left: 0"
-label.Parent = frame
-
--- CPU optimization
+-- === CPU SAVER ===
 if _G.CPUSaver then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -87,7 +63,6 @@ if _G.CPUSaver then
         Lighting.Ambient = Color3.new(0,0,0)
         Lighting.OutdoorAmbient = Color3.new(0,0,0)
     end)
-
     -- disable particles/trails
     task.spawn(function()
         for _, v in pairs(workspace:GetDescendants()) do
@@ -103,62 +78,80 @@ if _G.CPUSaver then
     end)
 end
 
--- === SERVER HOP FUNCTION ===
-local function serverHop(reason)
-    label.Text = "Server hopping..."
-    task.wait(1)
-    if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))
-    end
-    TeleportService:Teleport(game.PlaceId, player)
-end
+-- === OVERLAY ===
+local gui = Instance.new("ScreenGui")
+gui.Name = "Overlay"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
--- === AUTO TELEPORT + EMOTE WITH COUNTDOWN ===
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.25,0,0.1,0)
+frame.Position = UDim2.new(0.01,0,0.01,0)
+frame.BackgroundColor3 = Color3.new(0,0,0)
+frame.BackgroundTransparency = 0.2
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(1,0,1,0)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.new(1,1,1)
+label.TextScaled = true
+label.Text = "Initializing..."
+label.Parent = frame
+
+-- === AUTO TELEPORT + EMOTE + PLAYER COUNT ===
 task.spawn(function()
-    while _G.AutoTP do
-        -- create target list once
-        local allPlayers = Players:GetPlayers()
+    while true do
+        -- get all current players except yourself
         local targets = {}
-        for _, pl in ipairs(allPlayers) do
+        for _, pl in ipairs(Players:GetPlayers()) do
             if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
                 table.insert(targets, pl)
             end
         end
 
-        label.Text = "Players left: "..#targets
-
-        if #targets < minPlayers then
-            game:Shutdown()
-            return
-        end
-
+        local remaining = #targets
         for i, target in ipairs(targets) do
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            local targetHRP = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-            if hrp and targetHRP then
-                hrp.CFrame = CFrame.new(targetHRP.Position + targetHRP.CFrame.LookVector*3, targetHRP.Position)
+            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and
+               player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character.HumanoidRootPart
+                local targetPos = target.Character.HumanoidRootPart.Position
+                hrp.CFrame = CFrame.new(targetPos + target.Character.HumanoidRootPart.CFrame.LookVector * 3, targetPos)
             end
 
-            -- Emote spam
+            -- emote loop
             if _G.AutoEmote then
-                for _ = 1, math.floor(tpDelay/0.5) do
-                    pcall(function() player:FindFirstChildOfClass("Player"):Chat("/e point") end)
-                    task.wait(0.5)
+                local emotes = math.floor(tpDelay / emoteDelay)
+                for _ = 1, emotes do
+                    sendChat("/e point")
+                    task.wait(emoteDelay)
                 end
+            else
+                task.wait(tpDelay)
             end
 
-            -- remove from counter and update overlay
-            label.Text = "Players left: "..(#targets - i)
-            task.wait(tpDelay)
+            remaining = remaining - 1
+            label.Text = "Players left: "..remaining
         end
 
-        -- Hop after all players
-        serverHop("All players reached")
+        -- done all players
+        label.Text = "Server hopping..."
+        task.wait(1)
+
+        -- teleport to new server
+        if syn and syn.queue_on_teleport then
+            syn.queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua'))()")
+        end
+
+        local TeleportService = game:GetService("TeleportService")
+        TeleportService:Teleport(game.PlaceId, player)
         break
     end
 end)
 
--- === AUTO JUMP (anti-AFK) ===
+-- === AUTO JUMP ===
 task.spawn(function()
     while true do
         if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
