@@ -8,10 +8,15 @@ local messages = {
     "join /envyy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 6       -- seconds near each player
-local emoteDelay = 3    -- /e point spam
-local MOD_ID = 943340328
-local CPU_SAVE = true
+local tpDelay = 6
+local minPlayers = 2 -- minimum players to avoid leaving empty servers
+local MOD_ID = 943340328 -- replace with moderator userId
+
+-- === TOGGLES ===
+_G.AutoSay = true
+_G.AutoTP = true
+_G.AutoEmote = true
+_G.CPUSaver = true
 
 -- === SERVICES ===
 local Players = game:GetService("Players")
@@ -19,81 +24,40 @@ local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
 local player = Players.LocalPlayer
 local channel = TextChatService.TextChannels:WaitForChild("RBXGeneral")
 
--- === UTILITY FUNCTIONS ===
+-- === CHAT HELPER ===
+local lastMessageTime = 0
 local function sendChat(msg)
-    pcall(function()
+    local ok, err = pcall(function()
         channel:SendAsync(msg)
     end)
-end
-
-local function queueScript()
-    local SCRIPT_SOURCE = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
-    ]]
-    if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport(SCRIPT_SOURCE)
-    elseif queue_on_teleport then
-        queue_on_teleport(SCRIPT_SOURCE)
-    end
-end
-
-local function serverHop(reason)
-    overlayLabel.Text = "Server hopping..."
-    queueScript()
-    
-    local ok, body = pcall(function()
-        local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-        return game:HttpGet(url)
-    end)
-    
     if ok then
-        local data = game:GetService("HttpService"):JSONDecode(body)
-        if data and data.data then
-            for _, s in ipairs(data.data) do
-                if s.playing < s.maxPlayers and s.id ~= game.JobId then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, player)
-                    return
-                end
-            end
-        end
+        lastMessageTime = os.time()
     end
-    
-    TeleportService:Teleport(game.PlaceId, player)
 end
 
--- === OVERLAY ===
-local playerGui = player:WaitForChild("PlayerGui",10)
-if playerGui then
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "Overlay"
-    gui.ResetOnSpawn = false
-    gui.IgnoreGuiInset = true
-    gui.Parent = playerGui
+-- === PLAYER COUNTDOWN & OVERLAY ===
+local overlay = Instance.new("ScreenGui")
+overlay.Name = "PlayerOverlay"
+overlay.IgnoreGuiInset = true
+overlay.ResetOnSpawn = false
+overlay.Parent = player:WaitForChild("PlayerGui")
 
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.25,0,0.1,0)
-    frame.Position = UDim2.new(0.01,0,0.01,0)
-    frame.BackgroundColor3 = Color3.new(0,0,0)
-    frame.BackgroundTransparency = 0.2
-    frame.BorderSizePixel = 0
-    frame.Parent = gui
-
-    overlayLabel = Instance.new("TextLabel")
-    overlayLabel.Size = UDim2.new(1,0,1,0)
-    overlayLabel.BackgroundTransparency = 1
-    overlayLabel.TextColor3 = Color3.new(1,1,1)
-    overlayLabel.TextScaled = true
-    overlayLabel.Text = "Initializing..."
-    overlayLabel.Parent = frame
-else
-    warn("PlayerGui not found, overlay disabled")
-end
+local overlayLabel = Instance.new("TextLabel")
+overlayLabel.Size = UDim2.new(0.3,0,0.1,0)
+overlayLabel.Position = UDim2.new(0.35,0,0.05,0)
+overlayLabel.BackgroundColor3 = Color3.new(0,0,0)
+overlayLabel.TextColor3 = Color3.new(1,1,1)
+overlayLabel.TextScaled = true
+overlayLabel.Text = "Initializing..."
+overlayLabel.Parent = overlay
 
 -- === CPU SAVER ===
-if CPU_SAVE then
+if _G.CPUSaver then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
         RunService:Set3dRenderingEnabled(false)
@@ -103,7 +67,6 @@ if CPU_SAVE then
         Lighting.Ambient = Color3.new(0,0,0)
         Lighting.OutdoorAmbient = Color3.new(0,0,0)
     end)
-
     task.spawn(function()
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("ParticleEmitter") or v:IsA("Trail") then
@@ -118,22 +81,63 @@ if CPU_SAVE then
     end)
 end
 
--- === CHECK FOR MODERATOR ===
-for _, pl in ipairs(Players:GetPlayers()) do
-    if pl.UserId == MOD_ID then
-        serverHop("mod in server")
+-- === QUEUE ON TELEPORT ===
+local function queueScript()
+    local SCRIPT_SOURCE = [[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
+    ]]
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(SCRIPT_SOURCE)
+    elseif queue_on_teleport then
+        queue_on_teleport(SCRIPT_SOURCE)
     end
 end
+
+-- === SERVER HOP ===
+local function serverHop()
+    overlayLabel.Text = "Server hopping..."
+    queueScript()
+
+    local success, body = pcall(function()
+        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+    end)
+    
+    if success then
+        local data = HttpService:JSONDecode(body)
+        if data and data.data then
+            for _, server in ipairs(data.data) do
+                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                    return
+                end
+            end
+        end
+    end
+
+    TeleportService:Teleport(game.PlaceId, player)
+end
+
+-- === MOD DETECTION ===
+local function onModDetected()
+    serverHop()
+end
+
+for _, pl in ipairs(Players:GetPlayers()) do
+    if pl.UserId == MOD_ID then
+        onModDetected()
+    end
+end
+
 Players.PlayerAdded:Connect(function(pl)
     if pl.UserId == MOD_ID then
-        serverHop("mod joined")
+        onModDetected()
     end
 end)
 
--- === AUTO CHAT ===
+-- === AUTO CHAT LOOP ===
 task.spawn(function()
     local i = 1
-    while true do
+    while _G.AutoSay do
         sendChat(messages[i])
         i = i + 1
         if i > #messages then i = 1 end
@@ -141,42 +145,43 @@ task.spawn(function()
     end
 end)
 
--- === PLAYER TP + EMOTE ===
+-- === AUTO TELEPORT + EMOTE ===
 task.spawn(function()
-    local unvisited = {}
-    for _, pl in ipairs(Players:GetPlayers()) do
-        if pl ~= player then
-            table.insert(unvisited, pl)
-        end
-    end
-    
-    while #unvisited > 0 do
-        local target = table.remove(unvisited,1)
-        if overlayLabel then
-            overlayLabel.Text = string.format("Account: %s\nPlayers left: %d", player.Name, #unvisited)
+    while _G.AutoTP do
+        local allPlayers = {}
+        for _, pl in ipairs(Players:GetPlayers()) do
+            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+                table.insert(allPlayers, pl)
+            end
         end
 
-        if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and
-           player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = player.Character.HumanoidRootPart
-            local targetPos = target.Character.HumanoidRootPart.Position
-            hrp.CFrame = CFrame.new(targetPos + target.Character.HumanoidRootPart.CFrame.LookVector*3, targetPos)
+        local reachedPlayers = {}
+
+        for _, target in ipairs(allPlayers) do
+            overlayLabel.Text = ("Players left: %d"):format(#allPlayers - #reachedPlayers)
+            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3, target.Character.HumanoidRootPart.Position)
+                end
+            end
+
+            if _G.AutoEmote then
+                task.spawn(function()
+                    local emotes = math.floor(tpDelay / 0.5)
+                    for _ = 1, emotes do
+                        sendChat("/e point")
+                        task.wait(0.5)
+                    end
+                end)
+            end
+
+            table.insert(reachedPlayers, target)
+            task.wait(tpDelay)
         end
 
-        -- Emote spam while near
-        local elapsed = 0
-        while elapsed < tpDelay do
-            sendChat("/e point")
-            task.wait(emoteDelay)
-            elapsed = elapsed + emoteDelay
-        end
-    end
-
-    if overlayLabel then
         overlayLabel.Text = "Server hopping..."
+        serverHop()
+        task.wait(1)
     end
-
-    task.wait(1)
-    queueScript()
-    TeleportService:Teleport(game.PlaceId, player)
 end)
