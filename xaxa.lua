@@ -24,7 +24,6 @@ local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local GuiService = game:GetService("GuiService")
 
 local player = Players.LocalPlayer
 local channel = nil
@@ -39,78 +38,53 @@ local stats = {
     PlayersLeft = 0
 }
 
--- === CHAT HELPER ===
-local lastMessageTime = 0
-local function sendChat(msg)
-    if not channel then return end
-    local ok, _ = pcall(function()
-        channel:SendAsync(msg)
-    end)
-    if ok then
-        lastMessageTime = os.time()
-        stats.MessagesSent += 1
-        updateOverlay()
+-- === OVERLAY CREATION (delayed) ===
+local overlay, overlayLabel
+task.delay(3, function()
+    overlay = Instance.new("ScreenGui")
+    overlay.Name = "PlayerOverlay"
+    overlay.IgnoreGuiInset = true
+    overlay.ResetOnSpawn = false
+    overlay.Parent = player:WaitForChild("PlayerGui")
+
+    local overlayFrame = Instance.new("Frame")
+    overlayFrame.Size = UDim2.new(1,0,1,0)
+    overlayFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    overlayFrame.BackgroundTransparency = 0.35
+    overlayFrame.BorderSizePixel = 0
+    overlayFrame.Parent = overlay
+
+    overlayLabel = Instance.new("TextLabel")
+    overlayLabel.Size = UDim2.new(1,0,1,0)
+    overlayLabel.BackgroundTransparency = 1
+    overlayLabel.TextColor3 = Color3.fromRGB(0,255,0)
+    overlayLabel.Font = Enum.Font.GothamBold
+    overlayLabel.TextScaled = true
+    overlayLabel.Text = "🌐 Initializing..."
+    overlayLabel.Parent = overlayFrame
+end)
+
+-- === OVERLAY UPDATER ===
+local function updateOverlay()
+    if overlayLabel then
+        overlayLabel.Text =
+            "🧑 Account: " .. player.Name ..
+            "\n👥 Players left: " .. stats.PlayersLeft ..
+            "\n🔄 Servers hopped: " .. stats.ServersHopped ..
+            "\n💬 Messages sent: " .. stats.MessagesSent
     end
 end
 
--- === PLAYER COUNTDOWN & OVERLAY ===
-local overlay = Instance.new("ScreenGui")
-overlay.Name = "PlayerOverlay"
-overlay.IgnoreGuiInset = true
-overlay.ResetOnSpawn = false
-overlay.Parent = player:WaitForChild("PlayerGui")
-
-local overlayFrame = Instance.new("Frame")
-overlayFrame.Size = UDim2.new(0.35,0,0.22,0)
-overlayFrame.Position = UDim2.new(0.325,0,0.05,0)
-overlayFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-overlayFrame.BorderSizePixel = 0
-overlayFrame.Parent = overlay
-
-local uicorner = Instance.new("UICorner", overlayFrame)
-uicorner.CornerRadius = UDim.new(0,12)
-
-local overlayLabel = Instance.new("TextLabel")
-overlayLabel.Size = UDim2.new(1,0,1,0)
-overlayLabel.BackgroundTransparency = 1
-overlayLabel.TextColor3 = Color3.fromRGB(0,255,0)
-overlayLabel.Font = Enum.Font.Code
-overlayLabel.TextScaled = true
-overlayLabel.Text = "Initializing..."
-overlayLabel.Parent = overlayFrame
-
--- === OVERLAY UPDATER ===
-function updateOverlay()
-    overlayLabel.Text =
-        "Account: " .. player.Name ..
-        "\nPlayers left: " .. stats.PlayersLeft ..
-        "\nServers hopped: " .. stats.ServersHopped ..
-        "\nMessages sent: " .. stats.MessagesSent
-end
-
--- === CPU SAVER ===
-if _G.CPUSaver then
-    pcall(function()
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        RunService:Set3dRenderingEnabled(false)
-        Lighting.GlobalShadows = false
-        Lighting.Brightness = 0
-        Lighting.FogEnd = 9e9
-        Lighting.Ambient = Color3.new(0,0,0)
-        Lighting.OutdoorAmbient = Color3.new(0,0,0)
+-- === CHAT HELPER ===
+local function sendChat(msg)
+    if not channel then return end
+    local ok = pcall(function()
+        channel:SendAsync(msg)
     end)
-    task.spawn(function()
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Enabled = false
-            end
-        end
-        workspace.DescendantAdded:Connect(function(v)
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Enabled = false
-            end
-        end)
-    end)
+    if ok then
+        stats.MessagesSent += 1
+        updateOverlay()
+    end
 end
 
 -- === QUEUE ON TELEPORT ===
@@ -118,20 +92,18 @@ local function queueScript()
     local SCRIPT_SOURCE = [[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
     ]]
-    if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport(SCRIPT_SOURCE)
-    elseif queue_on_teleport then
-        queue_on_teleport(SCRIPT_SOURCE)
-    elseif game:GetService("TeleportService").OnTeleport then
-        game:GetService("TeleportService").OnTeleport:Connect(function()
+    pcall(function()
+        if syn and syn.queue_on_teleport then
+            syn.queue_on_teleport(SCRIPT_SOURCE)
+        elseif queue_on_teleport then
             queue_on_teleport(SCRIPT_SOURCE)
-        end)
-    end
+        end
+    end)
 end
 
 -- === SERVER HOP ===
 local function serverHop()
-    overlayLabel.Text = "Server hopping..."
+    if overlayLabel then overlayLabel.Text = "🔄 Server hopping..." end
     queueScript()
     stats.ServersHopped += 1
     updateOverlay()
@@ -171,12 +143,10 @@ local function checkForMods(pl)
     end
 end
 
--- Check existing players
 for _, pl in ipairs(Players:GetPlayers()) do
     checkForMods(pl)
 end
 
--- Listen for new players
 Players.PlayerAdded:Connect(function(pl)
     checkForMods(pl)
 end)
@@ -197,7 +167,7 @@ end)
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
     local i = 1
-    task.wait(4) -- 4s delay before first message
+    task.wait(4) -- startup delay
     while _G.AutoSay do
         sendChat(messages[i])
         i = i + 1
@@ -229,13 +199,14 @@ task.spawn(function()
             stats.PlayersLeft = #allPlayers - #reachedPlayers
             updateOverlay()
 
-            -- 3s delay before teleport
-            task.wait(3)
-
+            task.wait(3) -- 3s delay before TP
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
-                    hrp.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3, target.Character.HumanoidRootPart.Position)
+                    hrp.CFrame = CFrame.new(
+                        target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3,
+                        target.Character.HumanoidRootPart.Position
+                    )
                 end
             end
 
@@ -253,7 +224,7 @@ task.spawn(function()
             task.wait(tpDelay)
         end
 
-        overlayLabel.Text = "Server hopping..."
+        if overlayLabel then overlayLabel.Text = "🔄 Server hopping..." end
         serverHop()
         task.wait(1)
     end
