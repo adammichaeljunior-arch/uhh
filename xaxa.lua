@@ -36,7 +36,8 @@ end)
 local stats = {
     ServersHopped = 0,
     MessagesSent = 0,
-    PlayersLeft = 0
+    PlayersLeft = 0,
+    LastHop = "Never"
 }
 
 -- === CPU SAVER MODE ===
@@ -66,7 +67,7 @@ if _G.CPUSaver then
 end
 
 -- === OVERLAY CREATION (delayed 3s) ===
-local overlay, overlayLabel
+local overlay, overlayLabel, statusBar
 task.delay(3, function()
     overlay = Instance.new("ScreenGui")
     overlay.Name = "PlayerOverlay"
@@ -82,13 +83,24 @@ task.delay(3, function()
     overlayFrame.Parent = overlay
 
     overlayLabel = Instance.new("TextLabel")
-    overlayLabel.Size = UDim2.new(1,0,1,0)
+    overlayLabel.Size = UDim2.new(1,0,0.9,0)
+    overlayLabel.Position = UDim2.new(0,0,0,0)
     overlayLabel.BackgroundTransparency = 1
-    overlayLabel.TextColor3 = Color3.fromRGB(200,200,200) -- grey
+    overlayLabel.TextColor3 = Color3.fromRGB(200,200,200)
     overlayLabel.Font = Enum.Font.GothamBold
     overlayLabel.TextScaled = true
     overlayLabel.Text = "🌐 Initializing..."
     overlayLabel.Parent = overlayFrame
+
+    statusBar = Instance.new("TextLabel")
+    statusBar.Size = UDim2.new(1,0,0.1,0)
+    statusBar.Position = UDim2.new(0,0,0.9,0)
+    statusBar.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    statusBar.TextColor3 = Color3.fromRGB(150,150,150)
+    statusBar.Font = Enum.Font.Gotham
+    statusBar.TextScaled = true
+    statusBar.Text = "⚙ Initializing..."
+    statusBar.Parent = overlayFrame
 
     -- Pulse animation
     task.spawn(function()
@@ -111,6 +123,9 @@ local function updateOverlay()
             "\n👥 Players left: **" .. stats.PlayersLeft .. "**" ..
             "\n🔄 Servers hopped: **" .. stats.ServersHopped .. "**" ..
             "\n💬 Messages sent: **" .. stats.MessagesSent .. "**"
+    end
+    if statusBar then
+        statusBar.Text = "✅ Running | 🛡 Safe Mode | ⏰ Last Hop: " .. stats.LastHop
     end
 end
 
@@ -145,6 +160,7 @@ local function serverHop()
     if overlayLabel then overlayLabel.Text = "🔄 Server hopping..." end
     queueScript()
     stats.ServersHopped += 1
+    stats.LastHop = os.date("%H:%M:%S")
     updateOverlay()
 
     local success, body = pcall(function()
