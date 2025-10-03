@@ -31,16 +31,26 @@ local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
--- === WEBHOOK SENDER ===
-local function sendWebhook(content)
+-- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
+local function sendWebhook(content, title, color)
     if not content then return false end
-    local payload = HttpService:JSONEncode({ content = tostring(content) })
+    color = color or 16711680 -- default red
+    title = title or "Notification"
+    
+    local payload = {
+        embeds = {{
+            title = title,
+            description = content,
+            color = color,
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO format
+        }}
+    }
 
     local requestBody = {
         Url = WEBHOOK_URL,
         Method = "POST",
         Headers = { ["Content-Type"] = "application/json" },
-        Body = payload,
+        Body = HttpService:JSONEncode(payload),
     }
 
     if syn and syn.request then return syn.request(requestBody) end
@@ -150,8 +160,12 @@ end
 -- === SERVER HOP ===
 local function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    sendWebhook(("🌐 Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId))
+    sendWebhook(
+        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+        "🌐 Server Hop",
+        3447003 -- blue
+    )
 
     queueScript()
 
@@ -182,7 +196,11 @@ local MOD_IDS = {
 local function checkForMods(pl)
     for _, id in ipairs(MOD_IDS) do
         if pl.UserId == id then
-            sendWebhook("🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")")
+            sendWebhook(
+                "🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")",
+                "⚠️ Mod Alert",
+                16711680 -- red
+            )
             serverHop("Mod detected: " .. pl.Name)
             break
         end
@@ -215,6 +233,7 @@ task.spawn(function()
 
         if #allPlayers < 1 then
             info.Text = "⚠️ No players found. Hopping..."
+            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960) -- yellow
             serverHop("Empty server")
             return
         end
@@ -246,10 +265,11 @@ task.spawn(function()
             end
 
             table.insert(reached, target)
-            task.wait(tpDelay + 3) -- add small delay for human-like tp
+            task.wait(tpDelay + 3)
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
+        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280) -- green
         serverHop("Rotation after reaching players")
         task.wait(1)
     end
