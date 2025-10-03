@@ -153,7 +153,7 @@ end
 -- === QUEUE SCRIPT ===
 local function queueScript()
     local SRC = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/xaxa.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
