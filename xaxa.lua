@@ -10,7 +10,7 @@ local messages = {
     "join /Εnvyy 4 eheadd",
     "join /Εnvyy for friends"
 }
-local chatDelay = 2.5
+local chatDelay = 3.5
 local tpDelay = 6
 local overlayDelay = 6 -- seconds before showing overlay
 
