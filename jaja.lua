@@ -2,17 +2,16 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /envyy for fansignss",
-    "join /envyy 4 nitro",
-    "/envyy 4 headless",
-    "goon in /envyy",
-    "join /envyy 4 eheadd",
-    "join /envyy for friends"
+    "join /Εnvyy for fansignss",
+    "join /Εnvyy 4 nitro",
+    "/Εnvyy 4 headless",
+    "goon in /Εnvyy",
+    "join /Εnvyy 4 eheadd",
+    "join /Εnvyy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 4
-local overlayDelay = 2
-local STAFF_GROUP_ID = 0 -- Group with staff
+local tpDelay = 6
+local overlayDelay = 3 -- seconds before showing overlay
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -32,23 +31,16 @@ local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
--- === WEBHOOK EMBED SENDER ===
-local function sendEmbed(title, description, color)
-    local payload = {
-        embeds = {{
-            title = title,
-            description = description,
-            color = color or 0x2F3136,
-            footer = { text = "Envyy System" },
-            timestamp = DateTime.now():ToIsoDate()
-        }}
-    }
+-- === WEBHOOK SENDER ===
+local function sendWebhook(content)
+    if not content then return false end
+    local payload = HttpService:JSONEncode({ content = tostring(content) })
 
     local requestBody = {
         Url = WEBHOOK_URL,
         Method = "POST",
         Headers = { ["Content-Type"] = "application/json" },
-        Body = HttpService:JSONEncode(payload),
+        Body = payload,
     }
 
     if syn and syn.request then return syn.request(requestBody) end
@@ -81,7 +73,7 @@ background.BorderSizePixel = 0
 background.Visible = false
 background.Parent = overlay
 
--- panel
+-- main panel
 local panel = Instance.new("Frame")
 panel.Size = UDim2.new(0.5, 0, 0.5, 0)
 panel.Position = UDim2.new(0.25, 0, 0.25, 0)
@@ -97,15 +89,15 @@ uiCorner.Parent = panel
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
-title.Text = "🌐 Envyy System Overlay"
+title.Text = "🌐 Auto System Overlay"
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(200,200,200)
 title.Parent = panel
 
--- info
+-- info section
 local info = Instance.new("TextLabel")
-info.Size = UDim2.new(1, -20, 0.6, -20)
+info.Size = UDim2.new(1, -20, 0.8, -20)
 info.Position = UDim2.new(0, 10, 0.18, 0)
 info.BackgroundTransparency = 1
 info.Font = Enum.Font.Gotham
@@ -117,27 +109,7 @@ info.TextYAlignment = Enum.TextYAlignment.Top
 info.Text = "Loading..."
 info.Parent = panel
 
--- progress bar
-local barBG = Instance.new("Frame")
-barBG.Size = UDim2.new(1, -20, 0.1, 0)
-barBG.Position = UDim2.new(0, 10, 0.85, 0)
-barBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-barBG.BorderSizePixel = 0
-barBG.Parent = panel
-local barCorner = Instance.new("UICorner")
-barCorner.CornerRadius = UDim.new(0, 8)
-barCorner.Parent = barBG
-
-local barFill = Instance.new("Frame")
-barFill.Size = UDim2.new(0, 0, 1, 0)
-barFill.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-barFill.BorderSizePixel = 0
-barFill.Parent = barBG
-local fillCorner = Instance.new("UICorner")
-fillCorner.CornerRadius = UDim.new(0, 8)
-fillCorner.Parent = barFill
-
--- show overlay
+-- show overlay after delay
 task.delay(overlayDelay, function()
     background.Visible = true
 end)
@@ -166,7 +138,7 @@ end
 -- === QUEUE SCRIPT ===
 local function queueScript()
     local SRC = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/xaxa.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
@@ -178,13 +150,13 @@ end
 -- === SERVER HOP ===
 local function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    sendEmbed("🔄 Server Hop", ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId), 0x5865F2)
+    sendWebhook(("🌐 Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId))
 
     queueScript()
 
     local success, body = pcall(function()
-        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100")
+        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
     if success then
         local data = HttpService:JSONDecode(body)
@@ -209,8 +181,8 @@ local MOD_IDS = {
 
 local function checkForMods(pl)
     for _, id in ipairs(MOD_IDS) do
-        if pl.UserId == id or pl:IsInGroup(STAFF_GROUP_ID) then
-            sendEmbed("🚨 Mod Detected", pl.Name .. " ("..pl.UserId..") is staff!", 0xED4245)
+        if pl.UserId == id then
+            sendWebhook("🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")")
             serverHop("Mod detected: " .. pl.Name)
             break
         end
@@ -220,24 +192,13 @@ end
 for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
 Players.PlayerAdded:Connect(checkForMods)
 
--- === AUTO CHAT LOOP (safe only) ===
+-- === AUTO CHAT LOOP ===
 task.spawn(function()
     task.wait(3)
-    local safe = true
+    local i = 1
     while _G.AutoSay do
-        -- check mods before each message
-        for _, pl in ipairs(Players:GetPlayers()) do
-            if pl ~= player then
-                if pl:IsInGroup(STAFF_GROUP_ID) then
-                    safe = false
-                    serverHop("Staff detected before chatting")
-                end
-            end
-        end
-
-        if safe and channel then
-            sendChat(messages[math.random(1, #messages)])
-        end
+        sendChat(messages[i])
+        i = (i % #messages) + 1
         task.wait(chatDelay + math.random())
     end
 end)
@@ -260,9 +221,6 @@ task.spawn(function()
 
         local reached = {}
         for _, target in ipairs(allPlayers) do
-            local progress = (#reached / #allPlayers)
-            barFill:TweenSize(UDim2.new(progress, 0, 1, 0), "Out", "Quad", 0.5, true)
-
             info.Text = string.format(
                 "👤 User: %s (%s)\n🎯 Target: %s\n👥 Players left: %d\n🗂 JobId: %s\n",
                 player.Name, player.DisplayName,
@@ -270,7 +228,6 @@ task.spawn(function()
                 #allPlayers - #reached,
                 string.sub(game.JobId,1,8) .. "..."
             )
-
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and hrp then
                 hrp.CFrame = CFrame.new(
@@ -289,12 +246,13 @@ task.spawn(function()
             end
 
             table.insert(reached, target)
-            task.wait(tpDelay + 3)
+            task.wait(tpDelay + 3) -- add small delay for human-like tp
         end
 
-        barFill:TweenSize(UDim2.new(1, 0, 1, 0), "Out", "Quad", 0.5, true)
         info.Text = "🔄 Finished all players. Hopping..."
         serverHop("Rotation after reaching players")
         task.wait(1)
     end
 end)
+
+Make this a embed
