@@ -12,7 +12,7 @@ local messages = {
 }
 local chatDelay = 2.5
 local tpDelay = 6
-local overlayDelay = 3 -- seconds before showing overlay
+local overlayDelay = 6 -- seconds before showing overlay
 
 -- === TOGGLES ===
 _G.AutoSay = true
