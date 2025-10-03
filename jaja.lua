@@ -2,12 +2,12 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /Εnvyy for fansignss",
-    "join /Εnvyy 4 nitro",
-    "/Εnvyy 4 headless",
-    "goon in /Εnvyy",
-    "join /Εnvyy 4 eheadd",
-    "join /Εnvyy for friends"
+    "join /envyy for fansignss",
+    "join /envyy 4 nitro",
+    "/envyy 4 headless",
+    "goon in /envyy",
+    "join /envyy 4 eheadd",
+    "join /envyy for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 6
