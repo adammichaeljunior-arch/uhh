@@ -12,7 +12,7 @@ local messages = {
 local chatDelay = 2.5
 local tpDelay = 4
 local overlayDelay = 2
-local STAFF_GROUP_ID = 12940498 -- Group with staff
+local STAFF_GROUP_ID = 0 -- Group with staff
 
 -- === TOGGLES ===
 _G.AutoSay = true
