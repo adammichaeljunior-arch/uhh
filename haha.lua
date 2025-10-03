@@ -2,12 +2,12 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /envyy for fansignss",
-    "join /envyy 4 nitro",
-    "/envyy 4 headless",
-    "goon in /envyy",
-    "join /envyy 4 eheadd",
-    "join /envyy for friends"
+    "join /Εnvyy for fansignss",
+    "join /Εnvyy 4 nitro",
+    "/Εnvyy 4 headless",
+    "goon in /Εnvyy",
+    "join /Εnvyy 4 eheadd",
+    "join /Εnvyy for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 6
@@ -31,26 +31,16 @@ local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
--- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
-local function sendWebhook(content, title, color)
+-- === WEBHOOK SENDER ===
+local function sendWebhook(content)
     if not content then return false end
-    color = color or 16711680 -- default red
-    title = title or "Notification"
-    
-    local payload = {
-        embeds = {{
-            title = title,
-            description = content,
-            color = color,
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO format
-        }}
-    }
+    local payload = HttpService:JSONEncode({ content = tostring(content) })
 
     local requestBody = {
         Url = WEBHOOK_URL,
         Method = "POST",
         Headers = { ["Content-Type"] = "application/json" },
-        Body = HttpService:JSONEncode(payload),
+        Body = payload,
     }
 
     if syn and syn.request then return syn.request(requestBody) end
@@ -157,15 +147,37 @@ local function queueScript()
     end
 end
 
--- === SERVER HOP ===
+-- === MOD DETECTION ===
+local MOD_IDS = {
+    419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
+    7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
+    103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474
+}
+
+local function checkForMods(pl)
+    for _, id in ipairs(MOD_IDS) do
+        if pl.UserId == id then
+            sendWebhook("🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")")
+            serverHop("Mod detected: " .. pl.Name)
+            return true
+        end
+    end
+    return false
+end
+
+-- check for mods on join
+for _, pl in ipairs(Players:GetPlayers()) do
+    if checkForMods(pl) then return end -- stop script if mod is present
+end
+Players.PlayerAdded:Connect(function(pl)
+    if checkForMods(pl) then return end
+end)
+
+-- === SAFE SERVER HOPPING ===
 local function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    sendWebhook(
-        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
-        "🌐 Server Hop",
-        3447003 -- blue
-    )
+    sendWebhook(("🌐 Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId))
 
     queueScript()
 
@@ -177,38 +189,36 @@ local function serverHop(reason)
         if data and data.data then
             for _, server in ipairs(data.data) do
                 if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                    return
+                    -- Check players for mods before teleporting
+                    local serverDataSuccess, serverDataBody = pcall(function()
+                        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/"..server.id)
+                    end)
+                    if serverDataSuccess then
+                        local serverData = HttpService:JSONDecode(serverDataBody)
+                        local safe = true
+                        if serverData and serverData.players then
+                            for _, pl in ipairs(serverData.players) do
+                                for _, modId in ipairs(MOD_IDS) do
+                                    if pl.id == modId then
+                                        safe = false
+                                        break
+                                    end
+                                end
+                                if not safe then break end
+                            end
+                        end
+                        if safe then
+                            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                            return
+                        end
+                    end
                 end
             end
         end
     end
+    -- fallback if no safe server found
     TeleportService:Teleport(game.PlaceId, player)
 end
-
--- === MOD DETECTION ===
-local MOD_IDS = {
-    419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
-    7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
-    103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474
-}
-
-local function checkForMods(pl)
-    for _, id in ipairs(MOD_IDS) do
-        if pl.UserId == id then
-            sendWebhook(
-                "🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")",
-                "⚠️ Mod Alert",
-                16711680 -- red
-            )
-            serverHop("Mod detected: " .. pl.Name)
-            break
-        end
-    end
-end
-
-for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
-Players.PlayerAdded:Connect(checkForMods)
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
@@ -233,7 +243,6 @@ task.spawn(function()
 
         if #allPlayers < 1 then
             info.Text = "⚠️ No players found. Hopping..."
-            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960) -- yellow
             serverHop("Empty server")
             return
         end
@@ -265,11 +274,10 @@ task.spawn(function()
             end
 
             table.insert(reached, target)
-            task.wait(tpDelay + 3)
+            task.wait(tpDelay + 3) -- small human-like delay
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
-        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280) -- green
         serverHop("Rotation after reaching players")
         task.wait(1)
     end
