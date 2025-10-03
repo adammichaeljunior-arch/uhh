@@ -1,10 +1,10 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/XXXXXXXXX/XXXXXXXXX" -- replace
-local minPlayers = 10 -- won't join servers smaller than this
+local minPlayers = 10
 local chatDelay = 2.5
-local tpDelay = 6
 local overlayDelay = 3
-local hoverTime = 4 -- seconds to hover over each player
+local hoverTime = 4
+local joinDelay = 4 -- seconds wait before spam after join
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -23,6 +23,16 @@ local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
+
+-- === QUEUE SELF ===
+local SRC = [[
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/jaja.lua"))()
+]]
+if syn and syn.queue_on_teleport then
+    syn.queue_on_teleport(SRC)
+elseif queue_on_teleport then
+    queue_on_teleport(SRC)
+end
 
 -- === WEBHOOK ===
 local function sendWebhookEmbed(title, description, color)
@@ -121,11 +131,9 @@ local MOD_IDS = {
 
 local function checkForMods()
     for _, pl in ipairs(Players:GetPlayers()) do
-        for _, id in ipairs(MOD_IDS) do
-            if pl.UserId == id then
-                sendWebhookEmbed("🚨 Mod Detected", pl.Name .. " ("..pl.UserId..")", 16711680)
-                return true
-            end
+        if table.find(MOD_IDS, pl.UserId) then
+            sendWebhookEmbed("🚨 Mod Detected", pl.Name.." ("..pl.UserId..")", 16711680)
+            return true
         end
     end
     return false
@@ -133,7 +141,7 @@ end
 
 Players.PlayerAdded:Connect(function(pl)
     if table.find(MOD_IDS, pl.UserId) then
-        sendWebhookEmbed("🚨 Mod Detected", pl.Name .. " joined.", 16711680)
+        sendWebhookEmbed("🚨 Mod Detected", pl.Name.." joined", 16711680)
         task.wait(2)
         TeleportService:Teleport(game.PlaceId, player)
     end
@@ -163,7 +171,7 @@ end
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
-    task.wait(4) -- wait before spamming
+    task.wait(joinDelay) -- wait on join before starting
     if checkForMods() then serverHop("Mod present on join") return end
 
     while _G.AutoSay do
@@ -174,7 +182,7 @@ end)
 
 -- === HOVER FOLLOW LOOP ===
 task.spawn(function()
-    task.wait(4) -- initial mod check delay
+    task.wait(joinDelay)
     if checkForMods() then serverHop("Mod present on join") return end
 
     while _G.AutoTP do
@@ -206,7 +214,6 @@ task.spawn(function()
             if _G.AutoEmote then
                 sendChat("/e point")
             end
-
             task.wait(1)
         end
 
