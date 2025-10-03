@@ -1,6 +1,5 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
-local STAFF_GROUP_ID = 12940498 -- <--- Your staff/mod group ID
 
 local messages = {
     "join /Εnvyy for fansignss",
@@ -10,9 +9,11 @@ local messages = {
     "join /Εnvyy 4 eheadd",
     "join /Εnvyy for friends"
 }
-local chatDelay = 3.5
+local chatDelay = 2.5
 local tpDelay = 6
-local overlayDelay = 6 -- seconds before showing overlay
+local overlayDelay = 3 -- seconds before showing overlay
+local MIN_PLAYERS = 10 -- minimum players per server
+local STATUS_BAR_LENGTH = 20
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -32,10 +33,17 @@ local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
--- === WEBHOOK SENDER ===
-local function sendWebhook(content)
-    if not content then return false end
-    local payload = HttpService:JSONEncode({ content = tostring(content) })
+-- === EMBED SENDER ===
+local function sendWebhookEmbed(title, description, color)
+    local payload = HttpService:JSONEncode({
+        embeds = {{
+            title = title,
+            description = description,
+            color = color or 3447003,
+            footer = { text = "Auto System Logger" },
+            timestamp = DateTime.now():ToIsoDate()
+        }}
+    })
 
     local requestBody = {
         Url = WEBHOOK_URL,
@@ -51,13 +59,9 @@ local function sendWebhook(content)
 end
 
 -- === CHAT HELPER ===
-local lastMessageTime = 0
 local function sendChat(msg)
     if not channel then return end
-    local ok = pcall(function()
-        channel:SendAsync(msg)
-    end)
-    if ok then lastMessageTime = os.time() end
+    pcall(function() channel:SendAsync(msg) end)
 end
 
 -- === UI CREATION ===
@@ -75,27 +79,24 @@ background.Visible = false
 background.Parent = overlay
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.new(0.5, 0, 0.5, 0)
-panel.Position = UDim2.new(0.25, 0, 0.25, 0)
+panel.Size = UDim2.new(0.6, 0, 0.6, 0)
+panel.Position = UDim2.new(0.2, 0, 0.2, 0)
 panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 panel.BorderSizePixel = 0
 panel.Parent = background
-
-local uiCorner = Instance.new("UICorner")
-uiCorner.CornerRadius = UDim.new(0, 12)
-uiCorner.Parent = panel
+Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
-title.Text = "Auto System Overlay"
+title.Text = "🌐 Auto System Overlay"
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(200,200,200)
 title.Parent = panel
 
 local info = Instance.new("TextLabel")
-info.Size = UDim2.new(1, -20, 0.5, -40)
+info.Size = UDim2.new(1, -20, 0.8, -20)
 info.Position = UDim2.new(0, 10, 0.18, 0)
 info.BackgroundTransparency = 1
 info.Font = Enum.Font.Gotham
@@ -106,24 +107,6 @@ info.TextXAlignment = Enum.TextXAlignment.Left
 info.TextYAlignment = Enum.TextYAlignment.Top
 info.Text = "Loading..."
 info.Parent = panel
-
--- === STATUS BAR ===
-local statusBarBG = Instance.new("Frame")
-statusBarBG.Size = UDim2.new(0.9, 0, 0.05, 0)
-statusBarBG.Position = UDim2.new(0.05, 0, 0.75, 0)
-statusBarBG.BackgroundColor3 = Color3.fromRGB(50,50,50)
-statusBarBG.BorderSizePixel = 0
-statusBarBG.Parent = panel
-
-local statusBarFill = Instance.new("Frame")
-statusBarFill.Size = UDim2.new(0, 0, 1, 0)
-statusBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-statusBarFill.BorderSizePixel = 0
-statusBarFill.Parent = statusBarBG
-
-local function updateStatusBar(percent)
-    statusBarFill:TweenSize(UDim2.new(math.clamp(percent,0,1),0,1,0),"Out","Sine",0.3,true)
-end
 
 task.delay(overlayDelay, function()
     background.Visible = true
@@ -150,10 +133,17 @@ if _G.CPUSaver then
     end)
 end
 
+-- === STATUS BAR ===
+local function makeStatusBar(progress)
+    local filled = math.floor(progress * STATUS_BAR_LENGTH)
+    local empty = STATUS_BAR_LENGTH - filled
+    return string.rep("█", filled) .. string.rep("░", empty)
+end
+
 -- === QUEUE SCRIPT ===
 local function queueScript()
     local SRC = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/xaxa.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
@@ -162,41 +152,37 @@ local function queueScript()
     end
 end
 
--- === STAFF CHECK ===
-local function isStaff(pl)
-    local success, rank = pcall(function()
-        return pl:GetRankInGroup(STAFF_GROUP_ID)
-    end)
-    return success and rank > 0
-end
-
-local function checkForStaff()
-    for _, pl in ipairs(Players:GetPlayers()) do
-        if isStaff(pl) then
-            sendWebhook("🚨 Staff detected: "..pl.Name.." ("..pl.UserId..")")
-            serverHop("Staff detected: "..pl.Name)
-            return true
-        end
-    end
-    return false
-end
-
 -- === SERVER HOP ===
-function serverHop(reason)
+local function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    sendWebhook((" Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId))
+    sendWebhookEmbed("🌐 Server Hop", ("Reason: %s\nPlayers: %d\nJobId: %s"):format(reason or "rotation", #Players:GetPlayers(), game.JobId), 3066993)
 
     queueScript()
 
     local success, body = pcall(function()
-        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100")
     end)
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
-            for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
+            table.sort(data.data, function(a, b)
+                return a.playing > b.playing
+            end)
+
+            for i, server in ipairs(data.data) do
+                local progress = i / #data.data
+                local bar = makeStatusBar(progress)
+                info.Text = string.format(
+                    "🔎 Searching servers...\n📊 %s %d%%\n👥 Players: %d/%d",
+                    bar,
+                    math.floor(progress * 100),
+                    server.playing,
+                    server.maxPlayers
+                )
+                task.wait(0.25)
+
+                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing >= MIN_PLAYERS then
+                    info.Text = string.format("✅ Found server!\n👥 %d/%d players", server.playing, server.maxPlayers)
                     TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
                     return
                 end
@@ -206,19 +192,40 @@ function serverHop(reason)
     TeleportService:Teleport(game.PlaceId, player)
 end
 
--- === INITIAL STAFF CHECK BEFORE STARTING ===
-if checkForStaff() then return end
+-- === MODERATION PROTECTION ===
+local STAFF_GROUP_ID = 12940498
+local MOD_IDS = {419612796, 82591348, 540190518, 9125708679}
 
-Players.PlayerAdded:Connect(function(pl)
+local function isStaff(pl)
+    return (pl:IsInGroup(STAFF_GROUP_ID) or table.find(MOD_IDS, pl.UserId))
+end
+
+local function checkForMods(pl)
     if isStaff(pl) then
-        sendWebhook("🚨 Staff detected: "..pl.Name.." ("..pl.UserId..") joined")
-        serverHop("Staff detected on join: "..pl.Name)
+        sendWebhookEmbed("🚨 Staff/Mod Detected", ("User: %s (%d)"):format(pl.Name, pl.UserId), 15158332)
+        serverHop("Staff detected: " .. pl.Name)
+        return true
+    end
+    return false
+end
+
+-- Initial check
+for _, pl in ipairs(Players:GetPlayers()) do if checkForMods(pl) then return end end
+Players.PlayerAdded:Connect(checkForMods)
+
+-- Continuous recheck every second
+task.spawn(function()
+    while true do
+        for _, pl in ipairs(Players:GetPlayers()) do
+            if checkForMods(pl) then return end
+        end
+        task.wait(1)
     end
 end)
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
-    task.wait(3)
+    task.wait(5)
     local i = 1
     while _G.AutoSay do
         sendChat(messages[i])
@@ -227,12 +234,12 @@ task.spawn(function()
     end
 end)
 
--- === AUTO TELEPORT LOOP WITH STATUS BAR ===
+-- === AUTO TELEPORT LOOP ===
 task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
         for _, pl in ipairs(Players:GetPlayers()) do
-            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and not isStaff(pl) then
+            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
                 table.insert(allPlayers, pl)
             end
         end
@@ -243,16 +250,15 @@ task.spawn(function()
             return
         end
 
-        local reached = 0
+        local reached = {}
         for _, target in ipairs(allPlayers) do
             info.Text = string.format(
-                " User: %s (%s)\n Target: %s\n Players left: %d\n JobId: %s\n",
+                "👤 User: %s (%s)\n🎯 Target: %s\n👥 Remaining: %d\n📊 %s",
                 player.Name, player.DisplayName,
                 target.DisplayName or target.Name,
-                #allPlayers - reached,
-                string.sub(game.JobId,1,8) .. "..."
+                #allPlayers - #reached,
+                makeStatusBar(#reached / #allPlayers)
             )
-
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and hrp then
                 hrp.CFrame = CFrame.new(
@@ -270,9 +276,8 @@ task.spawn(function()
                 end)
             end
 
-            reached += 1
-            updateStatusBar(reached/#allPlayers)
-            task.wait(tpDelay + 1)
+            table.insert(reached, target)
+            task.wait(tpDelay + 3)
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
