@@ -38,9 +38,9 @@ local stats = {
     PlayersLeft = 0
 }
 
--- === OVERLAY CREATION (delayed) ===
+-- === OVERLAY CREATION (FULL SCREEN) ===
 local overlay, overlayLabel
-task.delay(3, function()
+task.delay(1, function()
     overlay = Instance.new("ScreenGui")
     overlay.Name = "PlayerOverlay"
     overlay.IgnoreGuiInset = true
@@ -49,6 +49,7 @@ task.delay(3, function()
 
     local overlayFrame = Instance.new("Frame")
     overlayFrame.Size = UDim2.new(1,0,1,0)
+    overlayFrame.Position = UDim2.new(0,0,0,0)
     overlayFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
     overlayFrame.BackgroundTransparency = 0.35
     overlayFrame.BorderSizePixel = 0
@@ -56,6 +57,7 @@ task.delay(3, function()
 
     overlayLabel = Instance.new("TextLabel")
     overlayLabel.Size = UDim2.new(1,0,1,0)
+    overlayLabel.Position = UDim2.new(0,0,0,0)
     overlayLabel.BackgroundTransparency = 1
     overlayLabel.TextColor3 = Color3.fromRGB(0,255,0)
     overlayLabel.Font = Enum.Font.GothamBold
@@ -134,21 +136,22 @@ local MOD_IDS = {
     103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474
 }
 
-local function checkForMods(pl)
-    for _, modId in ipairs(MOD_IDS) do
-        if pl.UserId == modId then
-            serverHop()
-            break
+local function checkForMods()
+    for _, pl in ipairs(Players:GetPlayers()) do
+        for _, modId in ipairs(MOD_IDS) do
+            if pl.UserId == modId then
+                serverHop()
+                return
+            end
         end
     end
 end
 
-for _, pl in ipairs(Players:GetPlayers()) do
-    checkForMods(pl)
-end
-
-Players.PlayerAdded:Connect(function(pl)
-    checkForMods(pl)
+-- Check every 5 seconds
+task.spawn(function()
+    while task.wait(5) do
+        checkForMods()
+    end
 end)
 
 -- === AUTO ACCEPT BUTTON ===
@@ -199,7 +202,7 @@ task.spawn(function()
             stats.PlayersLeft = #allPlayers - #reachedPlayers
             updateOverlay()
 
-            task.wait(3) -- 3s delay before TP
+            task.wait(3)
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
@@ -229,3 +232,34 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+
+-- === ULTRA LOW CPU MODE ===
+if _G.CPUSaver then
+    -- Remove hats/accessories/particles
+    task.spawn(function()
+        local function disableVisuals()
+            for _, pl in ipairs(Players:GetPlayers()) do
+                if pl.Character then
+                    for _, item in ipairs(pl.Character:GetChildren()) do
+                        if item:IsA("ParticleEmitter") or item:IsA("Trail") then
+                            item.Enabled = false
+                        elseif item:IsA("Accessory") or item:IsA("Hat") then
+                            item:Destroy()
+                        elseif item:IsA("Humanoid") then
+                            item:ChangeState(Enum.HumanoidStateType.Physics)
+                        end
+                    end
+                end
+            end
+        end
+        while task.wait(5) do
+            disableVisuals()
+        end
+    end)
+
+    -- Reduce Lighting and 3D rendering
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 100000
+    Lighting.Brightness = 1
+    RunService:Set3dRenderingEnabled(false)
+end
