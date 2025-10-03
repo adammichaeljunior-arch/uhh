@@ -88,7 +88,7 @@ uiCorner.Parent = panel
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
-title.Text = "🌐 Auto System Overlay"
+title.Text = "Auto System Overlay"
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(200,200,200)
@@ -184,7 +184,7 @@ end
 -- === SERVER HOP ===
 function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    sendWebhook(("🌐 Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+    sendWebhook((" Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
         :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId))
 
     queueScript()
@@ -246,7 +246,7 @@ task.spawn(function()
         local reached = 0
         for _, target in ipairs(allPlayers) do
             info.Text = string.format(
-                "👤 User: %s (%s)\n🎯 Target: %s\n👥 Players left: %d\n🗂 JobId: %s\n",
+                " User: %s (%s)\n Target: %s\n Players left: %d\n JobId: %s\n",
                 player.Name, player.DisplayName,
                 target.DisplayName or target.Name,
                 #allPlayers - reached,
