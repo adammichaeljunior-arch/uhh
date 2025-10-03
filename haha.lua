@@ -1,17 +1,18 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
-local STAFF_GROUP_ID = 12940498 -- <--- Replace with your staff/mod group ID
+local STAFF_GROUP_ID = 12940498 -- <--- Your staff/mod group ID
 
 local messages = {
-    "join /Εnvyy for fansignss",
-    "join /Εnvyy 4 nitro",
-    "/Εnvyy 4 headless",
-    "goon in /Εnvyy",
-    "join /Εnvyy 4 eheadd",
-    "join /Εnvyy for friends"
+    "join /envyy for fansignss",
+    "join /envyy 4 nitro",
+    "/envyy 4 headless",
+    "goon in /envyy",
+    "THEIRS BEEF IN /envyy",
+    "join /envyy 4 eheadd",
+    "join /envyy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 7
+local tpDelay = 6
 local overlayDelay = 3 -- seconds before showing overlay
 
 -- === TOGGLES ===
@@ -95,7 +96,7 @@ title.TextColor3 = Color3.fromRGB(200,200,200)
 title.Parent = panel
 
 local info = Instance.new("TextLabel")
-info.Size = UDim2.new(1, -20, 0.8, -20)
+info.Size = UDim2.new(1, -20, 0.5, -40)
 info.Position = UDim2.new(0, 10, 0.18, 0)
 info.BackgroundTransparency = 1
 info.Font = Enum.Font.Gotham
@@ -106,6 +107,24 @@ info.TextXAlignment = Enum.TextXAlignment.Left
 info.TextYAlignment = Enum.TextYAlignment.Top
 info.Text = "Loading..."
 info.Parent = panel
+
+-- === STATUS BAR ===
+local statusBarBG = Instance.new("Frame")
+statusBarBG.Size = UDim2.new(0.9, 0, 0.05, 0)
+statusBarBG.Position = UDim2.new(0.05, 0, 0.75, 0)
+statusBarBG.BackgroundColor3 = Color3.fromRGB(50,50,50)
+statusBarBG.BorderSizePixel = 0
+statusBarBG.Parent = panel
+
+local statusBarFill = Instance.new("Frame")
+statusBarFill.Size = UDim2.new(0, 0, 1, 0)
+statusBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+statusBarFill.BorderSizePixel = 0
+statusBarFill.Parent = statusBarBG
+
+local function updateStatusBar(percent)
+    statusBarFill:TweenSize(UDim2.new(math.clamp(percent,0,1),0,1,0),"Out","Sine",0.3,true)
+end
 
 task.delay(overlayDelay, function()
     background.Visible = true
@@ -209,7 +228,7 @@ task.spawn(function()
     end
 end)
 
--- === AUTO TELEPORT LOOP ===
+-- === AUTO TELEPORT LOOP WITH STATUS BAR ===
 task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
@@ -225,15 +244,16 @@ task.spawn(function()
             return
         end
 
-        local reached = {}
+        local reached = 0
         for _, target in ipairs(allPlayers) do
             info.Text = string.format(
                 "👤 User: %s (%s)\n🎯 Target: %s\n👥 Players left: %d\n🗂 JobId: %s\n",
                 player.Name, player.DisplayName,
                 target.DisplayName or target.Name,
-                #allPlayers - #reached,
+                #allPlayers - reached,
                 string.sub(game.JobId,1,8) .. "..."
             )
+
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and hrp then
                 hrp.CFrame = CFrame.new(
@@ -251,8 +271,9 @@ task.spawn(function()
                 end)
             end
 
-            table.insert(reached, target)
-            task.wait(tpDelay + 3)
+            reached += 1
+            updateStatusBar(reached/#allPlayers)
+            task.wait(tpDelay + 1)
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
