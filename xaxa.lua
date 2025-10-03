@@ -1,5 +1,6 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
+local STAFF_GROUP_ID = 12940498 -- <--- Your staff/mod group ID
 
 local messages = {
     "join /Εnvyy for fansignss",
@@ -31,26 +32,16 @@ local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
--- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
-local function sendWebhook(content, title, color)
+-- === WEBHOOK SENDER ===
+local function sendWebhook(content)
     if not content then return false end
-    color = color or 16711680 -- default red
-    title = title or "Notification"
-    
-    local payload = {
-        embeds = {{
-            title = title,
-            description = content,
-            color = color,
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO format
-        }}
-    }
+    local payload = HttpService:JSONEncode({ content = tostring(content) })
 
     local requestBody = {
         Url = WEBHOOK_URL,
         Method = "POST",
         Headers = { ["Content-Type"] = "application/json" },
-        Body = HttpService:JSONEncode(payload),
+        Body = payload,
     }
 
     if syn and syn.request then return syn.request(requestBody) end
@@ -83,7 +74,6 @@ background.BorderSizePixel = 0
 background.Visible = false
 background.Parent = overlay
 
--- main panel
 local panel = Instance.new("Frame")
 panel.Size = UDim2.new(0.5, 0, 0.5, 0)
 panel.Position = UDim2.new(0.25, 0, 0.25, 0)
@@ -95,7 +85,6 @@ local uiCorner = Instance.new("UICorner")
 uiCorner.CornerRadius = UDim.new(0, 12)
 uiCorner.Parent = panel
 
--- title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
@@ -105,9 +94,8 @@ title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(200,200,200)
 title.Parent = panel
 
--- info section
 local info = Instance.new("TextLabel")
-info.Size = UDim2.new(1, -20, 0.8, -20)
+info.Size = UDim2.new(1, -20, 0.5, -40)
 info.Position = UDim2.new(0, 10, 0.18, 0)
 info.BackgroundTransparency = 1
 info.Font = Enum.Font.Gotham
@@ -119,7 +107,24 @@ info.TextYAlignment = Enum.TextYAlignment.Top
 info.Text = "Loading..."
 info.Parent = panel
 
--- show overlay after delay
+-- === STATUS BAR ===
+local statusBarBG = Instance.new("Frame")
+statusBarBG.Size = UDim2.new(0.9, 0, 0.05, 0)
+statusBarBG.Position = UDim2.new(0.05, 0, 0.75, 0)
+statusBarBG.BackgroundColor3 = Color3.fromRGB(50,50,50)
+statusBarBG.BorderSizePixel = 0
+statusBarBG.Parent = panel
+
+local statusBarFill = Instance.new("Frame")
+statusBarFill.Size = UDim2.new(0, 0, 1, 0)
+statusBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+statusBarFill.BorderSizePixel = 0
+statusBarFill.Parent = statusBarBG
+
+local function updateStatusBar(percent)
+    statusBarFill:TweenSize(UDim2.new(math.clamp(percent,0,1),0,1,0),"Out","Sine",0.3,true)
+end
+
 task.delay(overlayDelay, function()
     background.Visible = true
 end)
@@ -157,15 +162,30 @@ local function queueScript()
     end
 end
 
+-- === STAFF CHECK ===
+local function isStaff(pl)
+    local success, rank = pcall(function()
+        return pl:GetRankInGroup(STAFF_GROUP_ID)
+    end)
+    return success and rank > 0
+end
+
+local function checkForStaff()
+    for _, pl in ipairs(Players:GetPlayers()) do
+        if isStaff(pl) then
+            sendWebhook("🚨 Staff detected: "..pl.Name.." ("..pl.UserId..")")
+            serverHop("Staff detected: "..pl.Name)
+            return true
+        end
+    end
+    return false
+end
+
 -- === SERVER HOP ===
-local function serverHop(reason)
+function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    sendWebhook(
-        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
-        "🌐 Server Hop",
-        3447003 -- blue
-    )
+    sendWebhook(("🌐 Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId))
 
     queueScript()
 
@@ -186,29 +206,15 @@ local function serverHop(reason)
     TeleportService:Teleport(game.PlaceId, player)
 end
 
--- === MOD DETECTION ===
-local MOD_IDS = {
-    419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
-    7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
-    103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474
-}
+-- === INITIAL STAFF CHECK BEFORE STARTING ===
+if checkForStaff() then return end
 
-local function checkForMods(pl)
-    for _, id in ipairs(MOD_IDS) do
-        if pl.UserId == id then
-            sendWebhook(
-                "🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")",
-                "⚠️ Mod Alert",
-                16711680 -- red
-            )
-            serverHop("Mod detected: " .. pl.Name)
-            break
-        end
+Players.PlayerAdded:Connect(function(pl)
+    if isStaff(pl) then
+        sendWebhook("🚨 Staff detected: "..pl.Name.." ("..pl.UserId..") joined")
+        serverHop("Staff detected on join: "..pl.Name)
     end
-end
-
-for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
-Players.PlayerAdded:Connect(checkForMods)
+end)
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
@@ -221,32 +227,32 @@ task.spawn(function()
     end
 end)
 
--- === AUTO TELEPORT LOOP ===
+-- === AUTO TELEPORT LOOP WITH STATUS BAR ===
 task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
         for _, pl in ipairs(Players:GetPlayers()) do
-            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and not isStaff(pl) then
                 table.insert(allPlayers, pl)
             end
         end
 
         if #allPlayers < 1 then
             info.Text = "⚠️ No players found. Hopping..."
-            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960) -- yellow
             serverHop("Empty server")
             return
         end
 
-        local reached = {}
+        local reached = 0
         for _, target in ipairs(allPlayers) do
             info.Text = string.format(
                 "👤 User: %s (%s)\n🎯 Target: %s\n👥 Players left: %d\n🗂 JobId: %s\n",
                 player.Name, player.DisplayName,
                 target.DisplayName or target.Name,
-                #allPlayers - #reached,
+                #allPlayers - reached,
                 string.sub(game.JobId,1,8) .. "..."
             )
+
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and hrp then
                 hrp.CFrame = CFrame.new(
@@ -264,12 +270,12 @@ task.spawn(function()
                 end)
             end
 
-            table.insert(reached, target)
-            task.wait(tpDelay + 3)
+            reached += 1
+            updateStatusBar(reached/#allPlayers)
+            task.wait(tpDelay + 1)
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
-        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280) -- green
         serverHop("Rotation after reaching players")
         task.wait(1)
     end
