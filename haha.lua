@@ -1,5 +1,6 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
+local STAFF_GROUP_ID = 12940498 -- <--- Replace with your staff/mod group ID
 
 local messages = {
     "join /Εnvyy for fansignss",
@@ -73,7 +74,6 @@ background.BorderSizePixel = 0
 background.Visible = false
 background.Parent = overlay
 
--- main panel
 local panel = Instance.new("Frame")
 panel.Size = UDim2.new(0.5, 0, 0.5, 0)
 panel.Position = UDim2.new(0.25, 0, 0.25, 0)
@@ -85,7 +85,6 @@ local uiCorner = Instance.new("UICorner")
 uiCorner.CornerRadius = UDim.new(0, 12)
 uiCorner.Parent = panel
 
--- title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
@@ -95,7 +94,6 @@ title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(200,200,200)
 title.Parent = panel
 
--- info section
 local info = Instance.new("TextLabel")
 info.Size = UDim2.new(1, -20, 0.8, -20)
 info.Position = UDim2.new(0, 10, 0.18, 0)
@@ -109,7 +107,6 @@ info.TextYAlignment = Enum.TextYAlignment.Top
 info.Text = "Loading..."
 info.Parent = panel
 
--- show overlay after delay
 task.delay(overlayDelay, function()
     background.Visible = true
 end)
@@ -147,34 +144,27 @@ local function queueScript()
     end
 end
 
--- === MOD DETECTION ===
-local MOD_IDS = {
-    419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
-    7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
-    103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474
-}
+-- === STAFF CHECK ===
+local function isStaff(pl)
+    local success, rank = pcall(function()
+        return pl:GetRankInGroup(STAFF_GROUP_ID)
+    end)
+    return success and rank > 0
+end
 
-local function checkForMods(pl)
-    for _, id in ipairs(MOD_IDS) do
-        if pl.UserId == id then
-            sendWebhook("🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")")
-            serverHop("Mod detected: " .. pl.Name)
+local function checkForStaff()
+    for _, pl in ipairs(Players:GetPlayers()) do
+        if isStaff(pl) then
+            sendWebhook("🚨 Staff detected: "..pl.Name.." ("..pl.UserId..")")
+            serverHop("Staff detected: "..pl.Name)
             return true
         end
     end
     return false
 end
 
--- check for mods on join
-for _, pl in ipairs(Players:GetPlayers()) do
-    if checkForMods(pl) then return end -- stop script if mod is present
-end
-Players.PlayerAdded:Connect(function(pl)
-    if checkForMods(pl) then return end
-end)
-
--- === SAFE SERVER HOPPING ===
-local function serverHop(reason)
+-- === SERVER HOP ===
+function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
     sendWebhook(("🌐 Hop\nUser: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
         :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId))
@@ -189,36 +179,24 @@ local function serverHop(reason)
         if data and data.data then
             for _, server in ipairs(data.data) do
                 if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
-                    -- Check players for mods before teleporting
-                    local serverDataSuccess, serverDataBody = pcall(function()
-                        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/"..server.id)
-                    end)
-                    if serverDataSuccess then
-                        local serverData = HttpService:JSONDecode(serverDataBody)
-                        local safe = true
-                        if serverData and serverData.players then
-                            for _, pl in ipairs(serverData.players) do
-                                for _, modId in ipairs(MOD_IDS) do
-                                    if pl.id == modId then
-                                        safe = false
-                                        break
-                                    end
-                                end
-                                if not safe then break end
-                            end
-                        end
-                        if safe then
-                            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                            return
-                        end
-                    end
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                    return
                 end
             end
         end
     end
-    -- fallback if no safe server found
     TeleportService:Teleport(game.PlaceId, player)
 end
+
+-- === INITIAL STAFF CHECK BEFORE STARTING ===
+if checkForStaff() then return end
+
+Players.PlayerAdded:Connect(function(pl)
+    if isStaff(pl) then
+        sendWebhook("🚨 Staff detected: "..pl.Name.." ("..pl.UserId..") joined")
+        serverHop("Staff detected on join: "..pl.Name)
+    end
+end)
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
@@ -236,7 +214,7 @@ task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
         for _, pl in ipairs(Players:GetPlayers()) do
-            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and not isStaff(pl) then
                 table.insert(allPlayers, pl)
             end
         end
@@ -274,7 +252,7 @@ task.spawn(function()
             end
 
             table.insert(reached, target)
-            task.wait(tpDelay + 3) -- small human-like delay
+            task.wait(tpDelay + 3)
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
