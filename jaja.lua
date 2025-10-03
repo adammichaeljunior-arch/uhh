@@ -1,18 +1,17 @@
 -- === SETTINGS ===
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
+
 local messages = {
-    "join / Εnvyy for fansignss",
-    "join / Εnvyy for emommys",
-    "bored? hop in / Εnvyy",
-    "GIVING RBX JOIN / Εnvyy",
-    "join / Εnvyy 4 nitro",
-    "/ Εnvyy 4 headless",
-    "goon in / Εnvyy",
-    "join / Εnvyy 4 eheadd",
-    "join / Εnvyy for ROBUX"
+    "join /Εnvyy for fansignss",
+    "join /Εnvyy 4 nitro",
+    "/Εnvyy 4 headless",
+    "goon in /Εnvyy",
+    "join /Εnvyy 4 eheadd",
+    "join /Εnvyy for friends"
 }
-local chatDelay = 3.5
+local chatDelay = 2.5
 local tpDelay = 6
-local minPlayers = 2 -- minimum players to avoid leaving empty servers
+local overlayDelay = 3 -- seconds before showing overlay
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -29,37 +28,101 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
+local channel = nil
+pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
--- Safe TextChannel reference (some games may not have RBXGeneral)
-local channel
-pcall(function()
-    channel = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
-end)
+-- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
+local function sendWebhook(content, title, color)
+    if not content then return false end
+    color = color or 16711680 -- default red
+    title = title or "Notification"
+    
+    local payload = {
+        embeds = {{
+            title = title,
+            description = content,
+            color = color,
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO format
+        }}
+    }
 
--- === CHAT HELPER ===
-local function sendChat(msg)
-    if channel then
-        pcall(function()
-            channel:SendAsync(msg)
-        end)
-    end
+    local requestBody = {
+        Url = WEBHOOK_URL,
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json" },
+        Body = HttpService:JSONEncode(payload),
+    }
+
+    if syn and syn.request then return syn.request(requestBody) end
+    if http_request then return http_request(requestBody) end
+    if http and http.request then return http.request(requestBody) end
+    if request then return request(requestBody) end
 end
 
--- === PLAYER COUNTDOWN & OVERLAY ===
+-- === CHAT HELPER ===
+local lastMessageTime = 0
+local function sendChat(msg)
+    if not channel then return end
+    local ok = pcall(function()
+        channel:SendAsync(msg)
+    end)
+    if ok then lastMessageTime = os.time() end
+end
+
+-- === UI CREATION ===
 local overlay = Instance.new("ScreenGui")
-overlay.Name = "PlayerOverlay"
+overlay.Name = "FancyOverlay"
 overlay.IgnoreGuiInset = true
 overlay.ResetOnSpawn = false
 overlay.Parent = player:WaitForChild("PlayerGui")
 
-local overlayLabel = Instance.new("TextLabel")
-overlayLabel.Size = UDim2.new(0.3,0,0.1,0)
-overlayLabel.Position = UDim2.new(0.35,0,0.05,0)
-overlayLabel.BackgroundColor3 = Color3.new(0,0,0)
-overlayLabel.TextColor3 = Color3.new(1,1,1)
-overlayLabel.TextScaled = true
-overlayLabel.Text = "Initializing..."
-overlayLabel.Parent = overlay
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+background.BorderSizePixel = 0
+background.Visible = false
+background.Parent = overlay
+
+-- main panel
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0.5, 0, 0.5, 0)
+panel.Position = UDim2.new(0.25, 0, 0.25, 0)
+panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+panel.BorderSizePixel = 0
+panel.Parent = background
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 12)
+uiCorner.Parent = panel
+
+-- title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.15, 0)
+title.BackgroundTransparency = 1
+title.Text = "🌐 Auto System Overlay"
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(200,200,200)
+title.Parent = panel
+
+-- info section
+local info = Instance.new("TextLabel")
+info.Size = UDim2.new(1, -20, 0.8, -20)
+info.Position = UDim2.new(0, 10, 0.18, 0)
+info.BackgroundTransparency = 1
+info.Font = Enum.Font.Gotham
+info.TextScaled = true
+info.TextWrapped = true
+info.TextColor3 = Color3.fromRGB(180,180,180)
+info.TextXAlignment = Enum.TextXAlignment.Left
+info.TextYAlignment = Enum.TextYAlignment.Top
+info.Text = "Loading..."
+info.Parent = panel
+
+-- show overlay after delay
+task.delay(overlayDelay, function()
+    background.Visible = true
+end)
 
 -- === CPU SAVER ===
 if _G.CPUSaver then
@@ -74,51 +137,52 @@ if _G.CPUSaver then
     end)
     task.spawn(function()
         for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Enabled = false
-            end
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
         end
         workspace.DescendantAdded:Connect(function(v)
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Enabled = false
-            end
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
         end)
     end)
 end
 
--- === QUEUE ON TELEPORT ===
+-- === QUEUE SCRIPT ===
 local function queueScript()
-    local SCRIPT_SOURCE = [[
+    local SRC = [[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport(SCRIPT_SOURCE)
+        syn.queue_on_teleport(SRC)
     elseif queue_on_teleport then
-        queue_on_teleport(SCRIPT_SOURCE)
+        queue_on_teleport(SRC)
     end
 end
 
 -- === SERVER HOP ===
-local function serverHop()
-    overlayLabel.Text = "Server hopping..."
+local function serverHop(reason)
+    info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
+    sendWebhook(
+        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+        "🌐 Server Hop",
+        3447003 -- blue
+    )
+
     queueScript()
 
     local success, body = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
-    
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
             for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
                     TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
                     return
                 end
             end
         end
     end
-
     TeleportService:Teleport(game.PlaceId, player)
 end
 
@@ -130,36 +194,34 @@ local MOD_IDS = {
 }
 
 local function checkForMods(pl)
-    for _, modId in ipairs(MOD_IDS) do
-        if pl.UserId == modId then
-            serverHop()
+    for _, id in ipairs(MOD_IDS) do
+        if pl.UserId == id then
+            sendWebhook(
+                "🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")",
+                "⚠️ Mod Alert",
+                16711680 -- red
+            )
+            serverHop("Mod detected: " .. pl.Name)
             break
         end
     end
 end
 
--- Check existing players
-for _, pl in ipairs(Players:GetPlayers()) do
-    checkForMods(pl)
-end
-
--- Listen for new players
-Players.PlayerAdded:Connect(function(pl)
-    checkForMods(pl)
-end)
+for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
+Players.PlayerAdded:Connect(checkForMods)
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
+    task.wait(3)
     local i = 1
     while _G.AutoSay do
         sendChat(messages[i])
-        i = i + 1
-        if i > #messages then i = 1 end
-        task.wait(chatDelay)
+        i = (i % #messages) + 1
+        task.wait(chatDelay + math.random())
     end
 end)
 
--- === AUTO TELEPORT + EMOTE + EMPTY SERVER CHECK ===
+-- === AUTO TELEPORT LOOP ===
 task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
@@ -169,66 +231,46 @@ task.spawn(function()
             end
         end
 
-        -- Auto-hop if no other players
-        if #allPlayers < minPlayers then
-            overlayLabel.Text = "Server empty, hopping..."
-            serverHop()
-            task.wait(2)
+        if #allPlayers < 1 then
+            info.Text = "⚠️ No players found. Hopping..."
+            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960) -- yellow
+            serverHop("Empty server")
+            return
         end
 
-        local reachedPlayers = {}
-
+        local reached = {}
         for _, target in ipairs(allPlayers) do
-            overlayLabel.Text = ("Players left: %d"):format(#allPlayers - #reachedPlayers)
-            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    hrp.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3, target.Character.HumanoidRootPart.Position)
-                end
+            info.Text = string.format(
+                "👤 User: %s (%s)\n🎯 Target: %s\n👥 Players left: %d\n🗂 JobId: %s\n",
+                player.Name, player.DisplayName,
+                target.DisplayName or target.Name,
+                #allPlayers - #reached,
+                string.sub(game.JobId,1,8) .. "..."
+            )
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and hrp then
+                hrp.CFrame = CFrame.new(
+                    target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3,
+                    target.Character.HumanoidRootPart.Position
+                )
             end
 
             if _G.AutoEmote then
                 task.spawn(function()
-                    local emotes = math.floor(tpDelay / 0.5)
-                    for _ = 1, emotes do
+                    for _ = 1, math.floor(tpDelay/0.5) do
                         sendChat("/e point")
                         task.wait(0.5)
                     end
                 end)
             end
 
-            table.insert(reachedPlayers, target)
-            task.wait(tpDelay)
+            table.insert(reached, target)
+            task.wait(tpDelay + 3)
         end
 
-        overlayLabel.Text = "Server hopping..."
-        serverHop()
+        info.Text = "🔄 Finished all players. Hopping..."
+        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280) -- green
+        serverHop("Rotation after reaching players")
         task.wait(1)
     end
 end)
-
--- === AUTO-I AGREE BUTTON ===
-local function autoAgreeButton(gui)
-    if gui:IsA("TextButton") or gui:IsA("ImageButton") then
-        if gui.Text:lower():find("i agree") or gui.Name:lower():find("iagree") then
-            pcall(function()
-                gui:Activate() -- clicks the button
-            end)
-        end
-    end
-end
-
--- Check existing buttons in PlayerGui
-for _, gui in ipairs(player:WaitForChild("PlayerGui"):GetDescendants()) do
-    autoAgreeButton(gui)
-end
-
--- Listen for new buttons added to PlayerGui
-player.PlayerGui.DescendantAdded:Connect(autoAgreeButton)
-
--- Check CoreGui too
-for _, gui in ipairs(game:GetService("CoreGui"):GetDescendants()) do
-    autoAgreeButton(gui)
-end
-
-game:GetService("CoreGui").DescendantAdded:Connect(autoAgreeButton)
