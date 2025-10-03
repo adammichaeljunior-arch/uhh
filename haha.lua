@@ -11,7 +11,7 @@ local messages = {
     "join /Εnvyy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 6
+local tpDelay = 7
 local overlayDelay = 3 -- seconds before showing overlay
 
 -- === TOGGLES ===
