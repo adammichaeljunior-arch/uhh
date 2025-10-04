@@ -103,7 +103,7 @@ local function queueScript()
     end)
 end
 
--- === SERVER HOP ===
+-- === SERVER HOP (PATCHED) ===
 local function serverHop()
     if overlayLabel then overlayLabel.Text = "🔄 Server hopping..." end
     queueScript()
@@ -113,19 +113,28 @@ local function serverHop()
     local success, body = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
-    
+
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
+            local available = {}
             for _, server in ipairs(data.data) do
-                if server.playing >= minPlayers and server.playing < server.maxPlayers and server.id ~= game.JobId then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                    return
+                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    table.insert(available, server)
                 end
+            end
+            if #available > 0 then
+                local chosen = available[math.random(1,#available)]
+                local ok, err = pcall(function()
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, chosen.id, player)
+                end)
+                if ok then return end -- worked
+                warn("Teleport failed, falling back:", err)
             end
         end
     end
 
+    -- fallback: always guaranteed to work
     TeleportService:Teleport(game.PlaceId, player)
 end
 
