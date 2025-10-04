@@ -2,7 +2,7 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /LOLZ for ekitty",
+    "join /LOLZ for ekittens",
     "bored?? join /LOLZ and chat",
     "join /LOLZ 4 nitro",
     "/LOLZ 4 headless",
