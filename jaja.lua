@@ -160,6 +160,7 @@ end
 -- === SERVER HOP ===
 local function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
+    
     sendWebhook(
         ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
         :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
@@ -172,17 +173,37 @@ local function serverHop(reason)
     local success, body = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
+
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
+            -- Collect servers that are not full, not current server, and have players
+            local validServers = {}
             for _, server in ipairs(data.data) do
                 if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                    return
+                    table.insert(validServers, server)
                 end
             end
+
+            if #validServers > 0 then
+                -- Sort descending by player count (almost full first)
+                table.sort(validServers, function(a, b)
+                    return a.playing > b.playing
+                end)
+
+                -- Optional: randomize among top 3 almost-full servers
+                local topCount = math.min(3, #validServers)
+                local server = validServers[math.random(1, topCount)]
+
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                return
+            end
         end
+    else
+        warn("Failed to fetch server list, teleporting to new instance...")
     end
+
+    -- Fallback: teleport to a new server if none found
     TeleportService:Teleport(game.PlaceId, player)
 end
 
