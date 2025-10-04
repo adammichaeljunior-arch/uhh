@@ -179,16 +179,16 @@ local function serverHop(reason)
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
-            -- Collect all available servers (not full, not current)
+            -- Collect servers with at least 10 players, not full, and not current
             local availableServers = {}
             for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                if server.playing >= 10 and server.playing < server.maxPlayers and server.id ~= game.JobId then
                     table.insert(availableServers, server)
                 end
             end
 
             if #availableServers > 0 then
-                -- Pick a random server from all available ones
+                -- Pick a random server from the filtered list
                 local server = availableServers[math.random(1, #availableServers)]
                 TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
                 return
