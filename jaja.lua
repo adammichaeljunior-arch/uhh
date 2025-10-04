@@ -179,24 +179,17 @@ local function serverHop(reason)
     if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
-            -- Collect servers that are not full, not current server, and have players
-            local validServers = {}
+            -- Collect all available servers (not full, not current)
+            local availableServers = {}
             for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
-                    table.insert(validServers, server)
+                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    table.insert(availableServers, server)
                 end
             end
 
-            if #validServers > 0 then
-                -- Sort descending by player count (almost full first)
-                table.sort(validServers, function(a, b)
-                    return a.playing > b.playing
-                end)
-
-                -- Optional: randomize among top 3 almost-full servers
-                local topCount = math.min(3, #validServers)
-                local server = validServers[math.random(1, topCount)]
-
+            if #availableServers > 0 then
+                -- Pick a random server from all available ones
+                local server = availableServers[math.random(1, #availableServers)]
                 TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
                 return
             end
@@ -208,6 +201,7 @@ local function serverHop(reason)
     -- Fallback: teleport to a new server if none found
     TeleportService:Teleport(game.PlaceId, player)
 end
+
 
 -- === MOD DETECTION ===
 local MOD_IDS = {
