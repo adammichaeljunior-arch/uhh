@@ -6,6 +6,7 @@ local messages = {
     "bored?? join /LΟLZ and chat",
     "join /LΟLZ  4 nitro",
     "/LΟLZ 4 headless",
+    "Face 4 Face (polls) active in /LΟLZ",
     "join  /LΟLZ 4 robuxx",
     "goon in  /LΟLZ",
     "join  /LΟLZ for fun",
