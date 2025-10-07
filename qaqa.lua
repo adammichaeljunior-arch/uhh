@@ -10,13 +10,13 @@ local messages = {
     "join  /|olz for fun",
     "join  /|olz for friends"
 }
-local chatDelay = 3.5
-local tpDelay = 5
+local chatDelay = 0.5
+local tpDelay = 2
 local overlayDelay = 1
 local minPlayers = 8
+local walkSpeed = 16
 
 -- === TOGGLES ===
-_G.AutoSay = true
 _G.AutoTP = true
 _G.AutoEmote = true
 _G.CPUSaver = true
@@ -26,8 +26,9 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local PathfindingService = game:GetService("PathfindingService")
 local player = Players.LocalPlayer
 
 local SayMessageRequest = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
@@ -85,37 +86,28 @@ task.delay(overlayDelay, function()
 end)
 
 -- === CPU SAVER ===
-if _G.CPUSaver then
-    pcall(function()
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        RunService:Set3dRenderingEnabled(false)
-        Lighting.GlobalShadows = false
-        Lighting.Brightness = 0
-        Lighting.FogEnd = 9e9
-        Lighting.Ambient = Color3.new(0,0,0)
-        Lighting.OutdoorAmbient = Color3.new(0,0,0)
-    end)
-end
+pcall(function()
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    RunService:Set3dRenderingEnabled(false)
+    Lighting.GlobalShadows = false
+    Lighting.Brightness = 0
+    Lighting.FogEnd = 9e9
+    Lighting.Ambient = Color3.new(0,0,0)
+    Lighting.OutdoorAmbient = Color3.new(0,0,0)
+end)
 
--- === PUBLIC CHAT FUNCTION ===
-local function SendPublicMessage(msg)
-    SayMessageRequest:FireServer(msg, "All")
-end
-
--- === TRACK PLAYERS ALREADY MESSAGED ===
+-- === TRACK PLAYERS AND SERVERS ===
 local messagedPlayers = {}
 local visitedServers = {}
 
--- === GET SERVER LIST FUNCTION ===
+-- === SERVER LIST FUNCTION ===
 local function GetServerList(placeId, minPlayers, maxPages)
     maxPages = maxPages or 5
     local servers = {}
     local cursor
     for i = 1, maxPages do
         local url = ("https://games.roblox.com/v1/games/%d/servers/Public?limit=100%s"):format(placeId, cursor and "&cursor="..cursor or "")
-        local success, response = pcall(function()
-            return HttpService:GetAsync(url)
-        end)
+        local success, response = pcall(function() return HttpService:GetAsync(url) end)
         if success then
             local data = HttpService:JSONDecode(response)
             for _, v in ipairs(data.data) do
@@ -149,10 +141,108 @@ local function IsTypingSameMessage(pl)
     return false
 end
 
--- === AUTO TELEPORT + EMOTE + CHAT LOOP ===
+-- === WALK TO PLAYER WITH PATHFINDING ===
+local function WalkTo(targetPos)
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then return end
+    local hrp = char.HumanoidRootPart
+    local humanoid = char.Humanoid
+    humanoid.WalkSpeed = walkSpeed
+
+    local path = PathfindingService:CreatePath()
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(hrp.Position)
+
+    path:MoveTo(targetPos)
+    path:ComputeAsync(hrp.Position, targetPos)
+
+    path:MoveTo(targetPos)
+    path:ComputeAsync(hrp.Position, targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    path:ComputeAsync(hrp.Position, targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    path:ComputeAsync(hrp.Position, targetPos)
+
+    path:MoveTo(targetPos)
+    path:ComputeAsync(hrp.Position, targetPos)
+    
+    path:MoveTo(targetPos)
+    path:ComputeAsync(hrp.Position, targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+    
+    path:MoveTo(targetPos)
+    
+    path:ComputeAsync(hrp.Position, targetPos)
+    path:MoveTo(targetPos)
+    
+    path:MoveTo(targetPos)
+    path:ComputeAsync(hrp.Position, targetPos)
+end
+
+-- === PUBLIC CHAT FUNCTION ===
+local function SendPublicMessage(msg)
+    SayMessageRequest:FireServer(msg, "All")
+end
+
+-- === MAIN LOOP ===
 task.spawn(function()
     task.wait(3)
-    while _G.AutoTP do
+    while true do
         local allPlayers = {}
         for _, pl in ipairs(Players:GetPlayers()) do
             if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and
@@ -168,7 +258,7 @@ task.spawn(function()
             local servers = GetServerList(game.PlaceId, minPlayers)
             if #servers < 1 then
                 info.Text = "⚠️ No full servers found, trying smaller servers..."
-                servers = GetServerList(game.PlaceId, 1) -- fallback
+                servers = GetServerList(game.PlaceId, 1)
             end
 
             if #servers > 0 then
@@ -182,30 +272,22 @@ task.spawn(function()
             end
         else
             for _, target in ipairs(allPlayers) do
-                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                local targetHRP = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-                if hrp and targetHRP then
-                    info.Text = string.format("🎯 Approaching: %s\n👤 You: %s", target.DisplayName or target.Name, player.DisplayName)
+                local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    info.Text = "🎯 Walking to: "..target.DisplayName
+                    WalkTo(hrp.Position)
 
-                    -- Move close
-                    hrp.CFrame = CFrame.new(targetHRP.Position + targetHRP.CFrame.LookVector * 3, targetHRP.Position)
-                    task.wait(0.8)
-
-                    -- Placeholder for emote
                     if _G.AutoEmote then
                         info.Text = "🤖 Emote simulated..."
                         task.wait(0.5)
                     end
 
-                    -- Send public messages
                     for _, msg in ipairs(messages) do
                         SendPublicMessage(msg)
-                        task.wait(0.3)
+                        task.wait(chatDelay)
                     end
 
-                    -- Mark as messaged
                     messagedPlayers[target.UserId] = true
-
                     task.wait(tpDelay)
                 end
             end
