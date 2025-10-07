@@ -2,15 +2,15 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "hop in ⁄|oIz for ekittens",
-    "bored?? ⁄|oIz and chat",
-    "⁄|oIz  4 nitro",
-    "⁄|oIz 4 headless",
-    "Face 4 Face (polls) active in ⁄|oIz",
-    "  ⁄|oIz 4 robuxx",
-    "goon in  ⁄|oIz",
-    "  ⁄|oIz for fun",
-    "  ⁄|oIz for friends"
+    "hop in /|oIz for ekittens",
+    "bored?? /|oIz and chat",
+    "/|oIz  4 nitro",
+    "/|oIz 4 headless",
+    "Face 4 Face (polls) active in /|oIz",
+    " /|oIz 4 robuxx",
+    "goon in  /|oIz",
+    "/|oIz for fun",
+    " /|oIz for friends"
 }
 local chatDelay = 3.5
 local tpDelay = 5
