@@ -2,15 +2,15 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join ⁄LoIz for ekittens",
-    "bored?? join ⁄LoIz and chat",
-    "join ⁄LoIz  4 nitro",
-    "⁄LoIz 4 headless",
-    "Face 4 Face (polls) active in ⁄LoIz",
-    "join  ⁄LoIz 4 robuxx",
-    "goon in  ⁄LoIz",
-    "join  ⁄LoIz for fun",
-    "join  ⁄LoIz for friends"
+    "join /LOLZ for ekittens",
+    "bored?? join /LOLZ and chat",
+    "join /LOLZ  4 nitro",
+    "/LOLZ 4 headless",
+    "Face 4 Face (polls) active in /LOLZ",
+    "join  /LOLZ 4 robuxx",
+    "goon in  /LOLZ",
+    "join  /LOLZ for fun",
+    "join  /LOLZ for friends"
 }
 local chatDelay = 3.5
 local tpDelay = 5
