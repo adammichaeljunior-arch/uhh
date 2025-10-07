@@ -7,7 +7,7 @@ local messages = {
     "⁄|oIz  4 nitro",
     "⁄|oIz 4 headless",
     "Face 4 Face (polls) active in ⁄|oIz",
-    "join  ⁄|oIz 4 robuxx",
+    "  ⁄|oIz 4 robuxx",
     "goon in  ⁄|oIz",
     "  ⁄|oIz for fun",
     "  ⁄|oIz for friends"
