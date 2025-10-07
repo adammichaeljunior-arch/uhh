@@ -183,7 +183,7 @@ local function serverHop(reason)
             -- Collect servers with at least 10 players, not full, and not current
             local availableServers = {}
             for _, server in ipairs(data.data) do
-                if server.playing >= 10 and server.playing < server.maxPlayers and server.id ~= game.JobId then
+                if server.playing >= 2 and server.playing < server.maxPlayers and server.id ~= game.JobId then
                     table.insert(availableServers, server)
                 end
             end
