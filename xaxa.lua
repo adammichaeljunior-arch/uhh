@@ -12,9 +12,9 @@ local messages = {
     "join  ⁄LoIz for fun",
     "join  ⁄LoIz for friends"
 }
-local chatDelay = 2.5
-local tpDelay = 4
-local overlayDelay = 3 -- seconds before showing overlay
+local chatDelay = 2
+local tpDelay = 3
+local overlayDelay = 1 -- seconds before showing overlay
 
 -- === TOGGLES ===
 _G.AutoSay = true
