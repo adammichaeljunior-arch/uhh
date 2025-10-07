@@ -1,54 +1,71 @@
 -- === SETTINGS ===
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
+
 local messages = {
-    "join ⁄|olz for ekittens",
-    "bored?? join ⁄|olz and chat",
-    "join ⁄|olz  4 nitro",
-    "⁄|olz 4 headless",
-    "Face 4 Face (polls) active in ⁄|olz",
-    "join  /|olz 4 robuxx",
-    "goon in  /|olz",
-    "join  /|olz for fun",
-    "join  /|olz for friends"
+    "join ⁄LoIz for ekittens",
+    "bored?? join ⁄LoIz and chat",
+    "join ⁄LoIz  4 nitro",
+    "⁄LoIz 4 headless",
+    "Face 4 Face (polls) active in ⁄LoIz",
+    "join  ⁄LoIz 4 robuxx",
+    "goon in  ⁄LoIz",
+    "join  ⁄LoIz for fun",
+    "join  ⁄LoIz for friends"
 }
-local chatDelay = 0.5
-local tpDelay = 2
+local chatDelay = 3.5
 local overlayDelay = 1
-local minPlayers = 8
 local walkSpeed = 16
 
 -- === TOGGLES ===
-_G.AutoTP = true
+_G.AutoSay = true
 _G.AutoEmote = true
 _G.CPUSaver = true
 
 -- === SERVICES ===
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local PathfindingService = game:GetService("PathfindingService")
 local player = Players.LocalPlayer
+local channel = nil
+pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 10) end)
 
--- === SAFE CHAT SETUP ===
-local SayMessageRequest
-local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-if chatEvents then
-    SayMessageRequest = chatEvents:FindFirstChild("SayMessageRequest")
-    if not SayMessageRequest then
-        warn("SayMessageRequest not found in DefaultChatSystemChatEvents")
-    end
-else
-    warn("DefaultChatSystemChatEvents not found in ReplicatedStorage")
+-- === WEBHOOK SENDER ===
+local HttpService = game:GetService("HttpService")
+local function sendWebhook(content, title, color)
+    if not content then return false end
+    color = color or 16711680
+    title = title or "Notification"
+
+    local payload = {
+        embeds = {{
+            title = title,
+            description = content,
+            color = color,
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    }
+
+    local requestBody = {
+        Url = WEBHOOK_URL,
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json" },
+        Body = HttpService:JSONEncode(payload),
+    }
+
+    if syn and syn.request then return syn.request(requestBody) end
+    if http_request then return http_request(requestBody) end
+    if http and http.request then return http.request(requestBody) end
+    if request then return request(requestBody) end
 end
 
-local function SendPublicMessage(msg)
-    if SayMessageRequest then
-        SayMessageRequest:FireServer(msg, "All")
-    else
-        warn("Cannot send message, SayMessageRequest missing")
-    end
+-- === CHAT HELPER ===
+local function sendChat(msg)
+    if not channel then return end
+    pcall(function()
+        channel:SendAsync(msg)
+    end)
 end
 
 -- === UI CREATION ===
@@ -103,68 +120,25 @@ task.delay(overlayDelay, function()
 end)
 
 -- === CPU SAVER ===
-pcall(function()
-    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-    RunService:Set3dRenderingEnabled(false)
-    Lighting.GlobalShadows = false
-    Lighting.Brightness = 0
-    Lighting.FogEnd = 9e9
-    Lighting.Ambient = Color3.new(0,0,0)
-    Lighting.OutdoorAmbient = Color3.new(0,0,0)
-end)
-
--- === TRACK PLAYERS AND SERVERS ===
-local messagedPlayers = {}
-local visitedServers = {}
-
--- === SERVER LIST FUNCTION ===
-local function GetServerList(placeId, minPlayers, maxPages)
-    maxPages = maxPages or 5
-    local servers = {}
-    local cursor
-    for i = 1, maxPages do
-        local url = ("https://games.roblox.com/v1/games/%d/servers/Public?limit=100%s"):format(placeId, cursor and "&cursor="..cursor or "")
-        local success, response = pcall(function() return HttpService:GetAsync(url) end)
-        if success then
-            local data = HttpService:JSONDecode(response)
-            for _, v in ipairs(data.data) do
-                if v.playing >= minPlayers and not visitedServers[v.id] then
-                    table.insert(servers, v.id)
-                end
-            end
-            cursor = data.nextPageCursor
-            if not cursor then break end
-        else
-            break
-        end
-    end
-    return servers
+if _G.CPUSaver then
+    pcall(function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        RunService:Set3dRenderingEnabled(false)
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.FogEnd = 9e9
+        Lighting.Ambient = Color3.new(0,0,0)
+        Lighting.OutdoorAmbient = Color3.new(0,0,0)
+    end)
 end
 
--- === CHECK IF PLAYER IS TYPING SAME MESSAGE ===
-local function IsTypingSameMessage(pl)
-    if pl:FindFirstChild("PlayerGui") and pl.PlayerGui:FindFirstChild("Chat") then
-        local success, chatBar = pcall(function()
-            return pl.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.TextBox
-        end)
-        if success and chatBar.Text ~= "" then
-            for _, msg in ipairs(messages) do
-                if chatBar.Text:lower():find(msg:lower()) then
-                    return true
-                end
-            end
-        end
-    end
-    return false
-end
-
--- === WALK TO PLAYER WITH PATHFINDING (CORRECTED) ===
-local function WalkTo(targetPos)
+-- === WALK TO PLAYER FUNCTION ===
+local function walkTo(targetPos)
     local char = player.Character
     if not char then return end
-    local humanoid = char:FindFirstChild("Humanoid")
     local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not hrp then return end
+    local humanoid = char:FindFirstChild("Humanoid")
+    if not hrp or not humanoid then return end
     humanoid.WalkSpeed = walkSpeed
 
     local path = PathfindingService:CreatePath({
@@ -174,68 +148,64 @@ local function WalkTo(targetPos)
         AgentJumpHeight = 10,
         AgentMaxSlope = 45
     })
-    
+
     path:ComputeAsync(hrp.Position, targetPos)
     local waypoints = path:GetWaypoints()
-    
-    for _, waypoint in ipairs(waypoints) do
-        humanoid:MoveTo(waypoint.Position)
+    for _, wp in ipairs(waypoints) do
+        humanoid:MoveTo(wp.Position)
         humanoid.MoveToFinished:Wait()
     end
 end
 
--- === MAIN LOOP ===
+-- === AUTO CHAT LOOP ===
+task.spawn(function()
+    task.wait(3)
+    local i = 1
+    while _G.AutoSay do
+        sendChat(messages[i])
+        i = (i % #messages) + 1
+        task.wait(chatDelay + math.random())
+    end
+end)
+
+-- === AUTO WALK + EMOTE LOOP ===
 task.spawn(function()
     task.wait(3)
     while true do
         local allPlayers = {}
         for _, pl in ipairs(Players:GetPlayers()) do
-            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and
-               not messagedPlayers[pl.UserId] and not IsTypingSameMessage(pl) then
+            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
                 table.insert(allPlayers, pl)
             end
         end
 
         if #allPlayers < 1 then
-            info.Text = "✅ All players messaged or typing. Searching new server..."
-            task.wait(2)
-
-            local servers = GetServerList(game.PlaceId, minPlayers)
-            if #servers < 1 then
-                info.Text = "⚠️ No full servers found, trying smaller servers..."
-                servers = GetServerList(game.PlaceId, 1)
-            end
-
-            if #servers > 0 then
-                local nextServer = servers[math.random(1, #servers)]
-                visitedServers[nextServer] = true
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, nextServer, player)
-                break
-            else
-                info.Text = "❌ No servers available. Retrying..."
-                task.wait(5)
-            end
+            info.Text = "⚠️ No players found. Waiting..."
+            task.wait(5)
         else
             for _, target in ipairs(allPlayers) do
                 local hrp = target.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
                     info.Text = "🎯 Walking to: "..target.DisplayName
-                    WalkTo(hrp.Position)
+                    walkTo(hrp.Position)
 
                     if _G.AutoEmote then
-                        info.Text = "🤖 Emote simulated..."
-                        task.wait(0.5)
+                        for _ = 1, 3 do
+                            sendChat("/e point")
+                            task.wait(0.5)
+                        end
                     end
 
                     for _, msg in ipairs(messages) do
-                        SendPublicMessage(msg)
-                        task.wait(chatDelay)
+                        sendChat(msg)
+                        task.wait(1)
                     end
 
-                    messagedPlayers[target.UserId] = true
-                    task.wait(tpDelay)
+                    task.wait(2)
                 end
             end
+            info.Text = "✅ Finished walking all players. Looping..."
+            task.wait(3)
         end
     end
 end)
