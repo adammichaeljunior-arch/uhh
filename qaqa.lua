@@ -2,22 +2,23 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join ⁄LoIz for ekittens",
-    "bored?? join ⁄LoIz and chat",
-    "join ⁄LoIz  4 nitro",
-    "⁄LoIz 4 headless",
-    "Face 4 Face (polls) active in ⁄LoIz",
-    "join  ⁄LoIz 4 robuxx",
-    "goon in  ⁄LoIz",
-    "join  ⁄LoIz for fun",
-    "join  ⁄LoIz for friends"
+    "join ⁄|oIz for ekittens",
+    "bored?? join ⁄|oIz and chat",
+    "join ⁄|oIz  4 nitro",
+    "⁄|oIz 4 headless",
+    "Face 4 Face (polls) active in ⁄|oIz",
+    "join  ⁄|oIz 4 robuxx",
+    "goon in  ⁄|oIz",
+    "join  ⁄|oIz for fun",
+    "join  ⁄|oIz for friends"
 }
 local chatDelay = 3.5
-local overlayDelay = 1
-local walkSpeed = 16
+local tpDelay = 5
+local overlayDelay = 1 -- seconds before showing overlay
 
 -- === TOGGLES ===
 _G.AutoSay = true
+_G.AutoTP = true
 _G.AutoEmote = true
 _G.CPUSaver = true
 
@@ -26,24 +27,25 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
-local PathfindingService = game:GetService("PathfindingService")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
 local player = Players.LocalPlayer
 local channel = nil
-pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 10) end)
+pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
--- === WEBHOOK SENDER ===
-local HttpService = game:GetService("HttpService")
+-- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
 local function sendWebhook(content, title, color)
     if not content then return false end
-    color = color or 16711680
+    color = color or 16711680 -- default red
     title = title or "Notification"
-
+    
     local payload = {
         embeds = {{
             title = title,
             description = content,
             color = color,
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO format
         }}
     }
 
@@ -61,11 +63,13 @@ local function sendWebhook(content, title, color)
 end
 
 -- === CHAT HELPER ===
+local lastMessageTime = 0
 local function sendChat(msg)
     if not channel then return end
-    pcall(function()
+    local ok = pcall(function()
         channel:SendAsync(msg)
     end)
+    if ok then lastMessageTime = os.time() end
 end
 
 -- === UI CREATION ===
@@ -82,6 +86,7 @@ background.BorderSizePixel = 0
 background.Visible = false
 background.Parent = overlay
 
+-- main panel
 local panel = Instance.new("Frame")
 panel.Size = UDim2.new(0.5, 0, 0.5, 0)
 panel.Position = UDim2.new(0.25, 0, 0.25, 0)
@@ -93,6 +98,7 @@ local uiCorner = Instance.new("UICorner")
 uiCorner.CornerRadius = UDim.new(0, 12)
 uiCorner.Parent = panel
 
+-- title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
@@ -102,6 +108,7 @@ title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(200,200,200)
 title.Parent = panel
 
+-- info section
 local info = Instance.new("TextLabel")
 info.Size = UDim2.new(1, -20, 0.8, -20)
 info.Position = UDim2.new(0, 10, 0.18, 0)
@@ -115,6 +122,7 @@ info.TextYAlignment = Enum.TextYAlignment.Top
 info.Text = "Loading..."
 info.Parent = panel
 
+-- show overlay after delay
 task.delay(overlayDelay, function()
     background.Visible = true
 end)
@@ -130,32 +138,158 @@ if _G.CPUSaver then
         Lighting.Ambient = Color3.new(0,0,0)
         Lighting.OutdoorAmbient = Color3.new(0,0,0)
     end)
+    task.spawn(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end
+        workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end)
+    end)
 end
 
--- === WALK TO PLAYER FUNCTION ===
-local function walkTo(targetPos)
-    local char = player.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("Humanoid")
-    if not hrp or not humanoid then return end
-    humanoid.WalkSpeed = walkSpeed
-
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
-        AgentCanJump = true,
-        AgentJumpHeight = 10,
-        AgentMaxSlope = 45
-    })
-
-    path:ComputeAsync(hrp.Position, targetPos)
-    local waypoints = path:GetWaypoints()
-    for _, wp in ipairs(waypoints) do
-        humanoid:MoveTo(wp.Position)
-        humanoid.MoveToFinished:Wait()
+-- === QUEUE SCRIPT ===
+local function queueScript()
+    local SRC = [[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/xaxa.lua"))()
+    ]]
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(SRC)
+    elseif queue_on_teleport then
+        queue_on_teleport(SRC)
     end
 end
+
+-- === SERVER HOP ===
+local function serverHop(reason)
+    info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
+    
+    sendWebhook(
+        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+        "🌐 Server Hop",
+        3447003 -- blue
+    )
+
+    queueScript()
+
+    local success, body = pcall(function()
+        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+    end)
+
+    if success then
+        local data = HttpService:JSONDecode(body)
+        if data and data.data then
+            -- Collect servers with at least 10 players, not full, and not current
+            local availableServers = {}
+            for _, server in ipairs(data.data) do
+                if server.playing >= 10 and server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    table.insert(availableServers, server)
+                end
+            end
+
+            if #availableServers > 0 then
+                -- Pick a random server from the filtered list
+                local server = availableServers[math.random(1, #availableServers)]
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                return
+            end
+        end
+    else
+        warn("Failed to fetch server list, teleporting to new instance...")
+    end
+
+    -- Fallback: teleport to a new server if none found
+    TeleportService:Teleport(game.PlaceId, player)
+end
+
+
+-- === MOD DETECTION ===
+local MOD_IDS = {
+    419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
+    7423673502, 3724230698, 418307435, 943340328, 37343237, 2862215389,
+    103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474,
+    9526977984, 9562355874, 8531293745, 9504701959, 9411319434, 9530045945
+}
+
+local function checkForMods(pl)
+    for _, id in ipairs(MOD_IDS) do
+        if pl.UserId == id then
+            sendWebhook(
+                "🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")",
+                "⚠️ Mod Alert",
+                16711680 -- red
+            )
+            serverHop("Mod detected: " .. pl.Name)
+            break
+        end
+    end
+end
+
+for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
+Players.PlayerAdded:Connect(checkForMods)
+
+-- AUTO
+-- safe alt-detection snippet (ignores the local player)
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+-- put the alt IDs you want to detect here
+local ALT_IDS = {
+    8234219480,
+    8336232606,
+    9220902620,
+    9220597769,
+    8234219480,
+    8336232606,
+    9220902620,
+    9220597769
+}
+
+-- returns (foundBoolean, playerObject or nil)
+local function findOtherAltInServer()
+    for _, pl in ipairs(Players:GetPlayers()) do
+        -- skip the local player explicitly
+        if pl.UserId ~= localPlayer.UserId then
+            for _, id in ipairs(ALT_IDS) do
+                if pl.UserId == id then
+                    return true, pl
+                end
+            end
+        end
+    end
+    return false, nil
+end
+
+-- Example usage: check once now and when new players join, and notify
+local function onAltDetected(pl)
+    -- pl is the Player object of the detected alt
+    if pl and pl.Name then
+        -- safe notification — do not auto-hop or auto-evade
+        print(("Alt detected in server: %s (id=%d)"):format(pl.Name, pl.UserId))
+        if overlayLabel then
+            overlayLabel.Text = ("⚠️ Alt detected: %s — please avoid duplicate actions"):format(pl.Name)
+        end
+        -- optionally show a popup or enable a manual button for a human to act
+    end
+end
+
+-- initial check
+local found, detected = findOtherAltInServer()
+if found then onAltDetected(detected) end
+
+-- watch for new players (will ignore local player automatically)
+Players.PlayerAdded:Connect(function(p)
+    task.wait(0.5) -- small delay so properties replicate
+    for _, id in ipairs(ALT_IDS) do
+        if p.UserId == id and p.UserId ~= localPlayer.UserId then
+            onAltDetected(p)
+            break
+        end
+    end
+end)
+
+
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
@@ -168,10 +302,9 @@ task.spawn(function()
     end
 end)
 
--- === AUTO WALK + EMOTE LOOP ===
+-- === AUTO TELEPORT LOOP ===
 task.spawn(function()
-    task.wait(3)
-    while true do
+    while _G.AutoTP do
         local allPlayers = {}
         for _, pl in ipairs(Players:GetPlayers()) do
             if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
@@ -180,32 +313,45 @@ task.spawn(function()
         end
 
         if #allPlayers < 1 then
-            info.Text = "⚠️ No players found. Waiting..."
-            task.wait(5)
-        else
-            for _, target in ipairs(allPlayers) do
-                local hrp = target.Character:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    info.Text = "🎯 Walking to: "..target.DisplayName
-                    walkTo(hrp.Position)
-
-                    if _G.AutoEmote then
-                        for _ = 1, 3 do
-                            sendChat("/e point")
-                            task.wait(0.5)
-                        end
-                    end
-
-                    for _, msg in ipairs(messages) do
-                        sendChat(msg)
-                        task.wait(1)
-                    end
-
-                    task.wait(2)
-                end
-            end
-            info.Text = "✅ Finished walking all players. Looping..."
-            task.wait(3)
+            info.Text = "⚠️ No players found. Hopping..."
+            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960) -- yellow
+            serverHop("Empty server")
+            return
         end
+
+        local reached = {}
+        for _, target in ipairs(allPlayers) do
+            info.Text = string.format(
+                "👤 User: %s (%s)\n🎯 Target: %s\n👥 Players left: %d\n🗂 JobId: %s\n",
+                player.Name, player.DisplayName,
+                target.DisplayName or target.Name,
+                #allPlayers - #reached,
+                string.sub(game.JobId,1,8) .. "..."
+            )
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and hrp then
+                hrp.CFrame = CFrame.new(
+                    target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3,
+                    target.Character.HumanoidRootPart.Position
+                )
+            end
+
+            if _G.AutoEmote then
+                task.spawn(function()
+                    for _ = 1, math.floor(tpDelay/0.5) do
+                        sendChat("/e point")
+                        task.wait(0.5)
+                    end
+                end)
+            end
+
+            table.insert(reached, target)
+            task.wait(tpDelay + 3)
+        end
+
+        info.Text = "🔄 Finished all players. Hopping..."
+        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280) -- green
+        serverHop("Rotation after reaching players")
+        task.wait(1)
     end
 end)
