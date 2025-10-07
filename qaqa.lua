@@ -13,7 +13,7 @@ local messages = {
 local chatDelay = 3.5
 local tpDelay = 5
 local overlayDelay = 1
-local minPlayers = 8 -- minimum players in a server
+local minPlayers = 8
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -27,7 +27,11 @@ local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
+
+local SayMessageRequest = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
+                               :WaitForChild("SayMessageRequest")
 
 -- === UI CREATION ===
 local overlay = Instance.new("ScreenGui")
@@ -93,13 +97,9 @@ if _G.CPUSaver then
     end)
 end
 
--- === EXPLOIT-SPECIFIC WHISPER FUNCTION ===
-local function SendWhisper(targetPlayer, message)
-    if syn and syn.send_message then
-        syn.send_message(targetPlayer.UserId, message) -- Synapse X API
-    else
-        warn("Whisper function not supported in this executor")
-    end
+-- === PUBLIC CHAT FUNCTION ===
+local function SendPublicMessage(msg)
+    SayMessageRequest:FireServer(msg, "All")
 end
 
 -- === TRACK PLAYERS ALREADY MESSAGED ===
@@ -132,11 +132,13 @@ local function GetServerList(placeId, minPlayers, maxPages)
     return servers
 end
 
--- === CHECK IF PLAYER IS TYPING A MESSAGE ===
+-- === CHECK IF PLAYER IS TYPING SAME MESSAGE ===
 local function IsTypingSameMessage(pl)
     if pl:FindFirstChild("PlayerGui") and pl.PlayerGui:FindFirstChild("Chat") then
-        local chatBar = pl.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.TextBox
-        if chatBar.Text ~= "" then
+        local success, chatBar = pcall(function()
+            return pl.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.TextBox
+        end)
+        if success and chatBar.Text ~= "" then
             for _, msg in ipairs(messages) do
                 if chatBar.Text:lower():find(msg:lower()) then
                     return true
@@ -147,7 +149,7 @@ local function IsTypingSameMessage(pl)
     return false
 end
 
--- === AUTO TELEPORT + EMOTE + WHISPER LOOP ===
+-- === AUTO TELEPORT + EMOTE + CHAT LOOP ===
 task.spawn(function()
     task.wait(3)
     while _G.AutoTP do
@@ -195,11 +197,9 @@ task.spawn(function()
                         task.wait(0.5)
                     end
 
-                    -- Whisper each message
+                    -- Send public messages
                     for _, msg in ipairs(messages) do
-                        pcall(function()
-                            SendWhisper(target, msg)
-                        end)
+                        SendPublicMessage(msg)
                         task.wait(0.3)
                     end
 
