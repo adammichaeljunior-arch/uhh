@@ -31,8 +31,25 @@ local Lighting = game:GetService("Lighting")
 local PathfindingService = game:GetService("PathfindingService")
 local player = Players.LocalPlayer
 
-local SayMessageRequest = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
-                               :WaitForChild("SayMessageRequest")
+-- === SAFE CHAT SETUP ===
+local SayMessageRequest
+local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+if chatEvents then
+    SayMessageRequest = chatEvents:FindFirstChild("SayMessageRequest")
+    if not SayMessageRequest then
+        warn("SayMessageRequest not found in DefaultChatSystemChatEvents")
+    end
+else
+    warn("DefaultChatSystemChatEvents not found in ReplicatedStorage")
+end
+
+local function SendPublicMessage(msg)
+    if SayMessageRequest then
+        SayMessageRequest:FireServer(msg, "All")
+    else
+        warn("Cannot send message, SayMessageRequest missing")
+    end
+end
 
 -- === UI CREATION ===
 local overlay = Instance.new("ScreenGui")
@@ -141,102 +158,30 @@ local function IsTypingSameMessage(pl)
     return false
 end
 
--- === WALK TO PLAYER WITH PATHFINDING ===
+-- === WALK TO PLAYER WITH PATHFINDING (CORRECTED) ===
 local function WalkTo(targetPos)
     local char = player.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then return end
-    local hrp = char.HumanoidRootPart
-    local humanoid = char.Humanoid
+    if not char then return end
+    local humanoid = char:FindFirstChild("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not hrp then return end
     humanoid.WalkSpeed = walkSpeed
 
-    local path = PathfindingService:CreatePath()
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(hrp.Position)
-
-    path:MoveTo(targetPos)
-    path:ComputeAsync(hrp.Position, targetPos)
-
-    path:MoveTo(targetPos)
-    path:ComputeAsync(hrp.Position, targetPos)
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        AgentJumpHeight = 10,
+        AgentMaxSlope = 45
+    })
     
     path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    path:ComputeAsync(hrp.Position, targetPos)
-
-    path:MoveTo(targetPos)
+    local waypoints = path:GetWaypoints()
     
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    path:ComputeAsync(hrp.Position, targetPos)
-
-    path:MoveTo(targetPos)
-    path:ComputeAsync(hrp.Position, targetPos)
-    
-    path:MoveTo(targetPos)
-    path:ComputeAsync(hrp.Position, targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-    
-    path:MoveTo(targetPos)
-    
-    path:ComputeAsync(hrp.Position, targetPos)
-    path:MoveTo(targetPos)
-    
-    path:MoveTo(targetPos)
-    path:ComputeAsync(hrp.Position, targetPos)
-end
-
--- === PUBLIC CHAT FUNCTION ===
-local function SendPublicMessage(msg)
-    SayMessageRequest:FireServer(msg, "All")
+    for _, waypoint in ipairs(waypoints) do
+        humanoid:MoveTo(waypoint.Position)
+        humanoid.MoveToFinished:Wait()
+    end
 end
 
 -- === MAIN LOOP ===
