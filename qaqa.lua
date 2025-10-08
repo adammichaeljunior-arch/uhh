@@ -12,8 +12,8 @@ local messages = {
     "/|oIz for fun",
     " /|oIz for friends"
 }
-local chatDelay = 3.5
-local tpDelay = 5
+local chatDelay = 2.5
+local tpDelay = 2.5
 local overlayDelay = 1 -- seconds before showing overlay
 
 -- === TOGGLES ===
