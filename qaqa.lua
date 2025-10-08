@@ -160,47 +160,100 @@ local function queueScript()
     end
 end
 
--- === SERVER HOP ===
+-- === SERVER HOP (Persistent, No Back-to-Back Rejoin) ===
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local DATA_FILE = "lastServerId.txt"
+local lastServerId = nil
+
+-- Try to load last server ID from file (persistent memory)
+pcall(function()
+	if isfile and isfile(DATA_FILE) then
+		lastServerId = readfile(DATA_FILE)
+	end
+end)
+
+-- Helper: fetch servers
+local function getAvailableServers(minPlayers)
+	local success, body = pcall(function()
+		return game:HttpGet(
+			("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100"):format(game.PlaceId)
+		)
+	end)
+
+	if not success then
+		warn("[ServerHop] Failed to fetch servers.")
+		return {}
+	end
+
+	local data = HttpService:JSONDecode(body)
+	if not data or not data.data then return {} end
+
+	local servers = {}
+	for _, server in ipairs(data.data) do
+		if server.id ~= game.JobId
+			and server.id ~= lastServerId -- skip same server as last
+			and server.playing >= (minPlayers or 2)
+			and server.playing < server.maxPlayers then
+			table.insert(servers, server)
+		end
+	end
+	return servers
+end
+
+-- Main function
 local function serverHop(reason)
-    info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    
-    sendWebhook(
-        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
-        "🌐 Server Hop",
-        3447003 -- blue
-    )
+	info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
 
-    queueScript()
+	sendWebhook(
+		("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+			:format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+		"🌐 Server Hop",
+		3447003
+	)
 
-    local success, body = pcall(function()
-        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
-    end)
+	queueScript()
 
-    if success then
-        local data = HttpService:JSONDecode(body)
-        if data and data.data then
-            -- Collect servers with at least 10 players, not full, and not current
-            local availableServers = {}
-            for _, server in ipairs(data.data) do
-                if server.playing >= 2 and server.playing < server.maxPlayers and server.id ~= game.JobId then
-                    table.insert(availableServers, server)
-                end
-            end
+	local attempt = 0
+	while attempt < 6 do
+		attempt += 1
+		local servers = getAvailableServers(10)
+		if #servers == 0 then
+			warn("[ServerHop] No suitable servers found (attempt " .. attempt .. "). Retrying in 3s...")
+			task.wait(3)
+			continue
+		end
 
-            if #availableServers > 0 then
-                -- Pick a random server from the filtered list
-                local server = availableServers[math.random(1, #availableServers)]
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                return
-            end
-        end
-    else
-        warn("Failed to fetch server list, teleporting to new instance...")
-    end
+		local target = servers[math.random(1, #servers)]
+		print("[ServerHop] Attempting teleport to:", target.id)
 
-    -- Fallback: teleport to a new server if none found
-    TeleportService:Teleport(game.PlaceId, player)
+		local success, err = pcall(function()
+			-- Save last server before teleport
+			lastServerId = game.JobId
+			if writefile then
+				writefile(DATA_FILE, game.JobId)
+			end
+			TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
+		end)
+
+		if success then
+			return
+		else
+			warn("[ServerHop] Teleport failed:", err)
+			task.wait(2)
+		end
+	end
+
+	-- Fallback
+	warn("[ServerHop] All attempts failed, teleporting to new instance...")
+	if writefile then
+		writefile(DATA_FILE, game.JobId)
+	end
+	lastServerId = game.JobId
+	TeleportService:Teleport(game.PlaceId, player)
 end
 
 
