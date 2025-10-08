@@ -6,7 +6,7 @@ local messages = {
     "bored?? /|oIz and chat",
     "/|oIz  4 nitro",
     "/|oIz 4 headless",
-    "Face 4 Face (polls) active in /|oIz",
+    "BEEF IN /|olz",
     " /|oIz 4 robuxx",
     "goon in  /|oIz",
     "/|oIz for fun",
