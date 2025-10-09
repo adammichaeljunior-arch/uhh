@@ -77,13 +77,6 @@ end
 
 -- hi
 
--- === FPS CAP ===
-if setfpscap then
-    setfpscap(6) -- Change this to your desired FPS
-else
-    warn("Executor does not support setfpscap!")
-end
-
 -- === UI CREATION ===
 local overlay = Instance.new("ScreenGui")
 overlay.Name = "FancyOverlay"
@@ -235,6 +228,14 @@ task.spawn(function()
         task.wait(chatDelay + math.random())
     end
 end)
+
+
+-- === FPS CAP ===
+if setfpscap then
+    setfpscap(6) -- Change this to your desired FPS
+else
+    warn("Executor does not support setfpscap!")
+end
 
 -- === AUTO TELEPORT LOOP ===
 task.spawn(function()
