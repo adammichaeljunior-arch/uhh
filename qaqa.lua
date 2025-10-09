@@ -6,7 +6,7 @@ local messages = {
     "join /LOLZ 4 nitro",
     "/LOLZ 4 headless",
     "goon in /LOLZ",
-    "join /LOLZ 4 eheadd",
+    "join /LOLZ 4 Ekittens",
     "join /LOLZ for friends"
 }
 local chatDelay = 2.5
