@@ -293,17 +293,46 @@ Players.PlayerAdded:Connect(checkForMods)
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 
--- put the alt IDs you want to detect here
-local ALT_IDS = {
-    8234219480,
-    8336232606,
-    9220902620,
-    9220597769,
-    8234219480,
-    8336232606,
-    9220902620,
-    9220597769
-}
+-- Spam detection parameters
+local spamThreshold = 3 -- number of repeated messages
+local spamTimeWindow = 10 -- seconds
+
+local recentMessages = {} -- {message = {count, firstTimestamp}}
+
+local function checkSpam(msg)
+    local currentTime = os.time()
+    if recentMessages[msg] then
+        local data = recentMessages[msg]
+        if currentTime - data.firstTimestamp <= spamTimeWindow then
+            data.count = data.count + 1
+            if data.count >= spamThreshold then
+                -- Spam detected, trigger server hop
+                warn("Spam detected: " .. msg)
+                sendWebhook("Spam detected: " .. msg, "⚠️ Spam Alert", 16711680)
+                serverHop("Spam detected in chat")
+                -- Reset after hopping
+                recentMessages = {}
+                return true
+            end
+        else
+            -- Reset count if outside time window
+            recentMessages[msg] = {count = 1, firstTimestamp = currentTime}
+        end
+    else
+        recentMessages[msg] = {count = 1, firstTimestamp = currentTime}
+    end
+    return false
+end
+
+-- Override or hook into your sendChat function to include spam check
+local originalSendChat = sendChat
+sendChat = function(msg)
+    if checkSpam(msg) then
+        -- Spam detected, do not send message
+        return
+    end
+    originalSendChat(msg)
+end
 
 -- returns (foundBoolean, playerObject or nil)
 local function findOtherAltInServer()
