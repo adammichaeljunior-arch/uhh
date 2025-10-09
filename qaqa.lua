@@ -11,16 +11,17 @@ end
 
 
 local messages = {
-    "hop in /LOLS for ekittens",
-    "bored?? /LOLS and chat",
+    "hop in /LOLZ for ekittens",
+    "bored?? /LOLZ and chat",
     "/LOLZ  4 nitro",
     "/LOLS 4 headless",
-    "BEEF IN /LOLS",
-    " /LOLS 4 robuxx",
-    "goon in  /LOLS",
-    "/LOLS for fun",
-    " /LOLS for friends"
+    "BEEF IN /LOLZ",
+    " /LOLZ 4 robuxx",
+    "goon in  /LOLZ",
+    "/LOLZ for fun",
+    " /LOLZ for friends"
 }
+
 local chatDelay = 2.5
 local tpDelay = 2.5
 local overlayDelay = 1 -- seconds before showing overlay
