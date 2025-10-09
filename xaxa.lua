@@ -6,10 +6,6 @@ if setfpscap then
 else
     warn("Executor does not support setfpscap!")
 end
---by chat gpt ;)
-
-loadstring(game:HttpGet("https://raw.githubusercontent.com/hassanxzayn-lua/Anti-afk/main/antiafkbyhassanxzyn"))();
-
 
 
 local messages = {
