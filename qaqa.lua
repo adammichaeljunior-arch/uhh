@@ -1,4 +1,4 @@
--- Settings
+-- === SETTINGS ===
 local messages = {
     "hop in /LOLZ for ekittens",
     "bored?? /LOLZ and chat",
@@ -11,6 +11,7 @@ local messages = {
     " /LOLZ for friends"
 }
 local fpsCap = 5
+local webhookURL = "YOUR_WEBHOOK_URL" -- Replace if needed
 
 -- Cap FPS
 if setfpscap then
@@ -36,10 +37,11 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 
--- === QUEUE SCRIPT ===
+-- Queue script on teleport
 local function queueScript()
+    local scriptURL = "https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua" -- your script URL
     local SRC = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"))()
+        loadstring(game:HttpGet("]]..scriptURL..[["))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
@@ -47,7 +49,6 @@ local function queueScript()
         queue_on_teleport(SRC)
     end
 end
-
 
 -- Send chat message
 local function sendChat(msg)
@@ -58,7 +59,7 @@ local function sendChat(msg)
     end)
 end
 
--- Get other players
+-- Get all other players
 local function getOtherPlayers()
     local t = {}
     for _, p in ipairs(Players:GetPlayers()) do
@@ -69,28 +70,26 @@ local function getOtherPlayers()
     return t
 end
 
--- Load your custom script
-loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"))()
-
--- Helper: get position directly in front of target facing them
+-- Helper: get position directly in front facing target
 local function getFrontCFrame(targetHRP)
     local offset = targetHRP.CFrame.LookVector * 3 -- 3 studs in front
     local position = targetHRP.CFrame.Position + offset
     return CFrame.new(position, targetHRP.CFrame.Position)
 end
 
--- Main cycle
+-- Main loop
 local function main()
     while true do
         local targets = getOtherPlayers()
         if #targets == 0 then
             -- No players, hop server
-            queueOnTeleport()
+            queueScript()
             TeleportService:Teleport(game.PlaceId)
             return
         end
 
         for _, p in ipairs(targets) do
+            -- Teleport in front facing the player
             local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
             local hrpPlayer = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if hrp and hrpPlayer then
@@ -101,11 +100,11 @@ local function main()
             sendChat(messages[math.random(#messages)])
             -- Spam emote
             sendChat("/e point")
-            wait(2)
+            wait(3)
         end
 
         -- After visiting all players, hop server
-        queueOnTeleport()
+        queueScript()
         TeleportService:Teleport(game.PlaceId)
         return
     end
