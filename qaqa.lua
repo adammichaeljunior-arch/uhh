@@ -11,15 +11,15 @@ end
 
 
 local messages = {
-    "hop in /|oIz for ekittens",
-    "bored?? /|oIz and chat",
-    "/|oIz  4 nitro",
-    "/|oIz 4 headless",
-    "BEEF IN /|olz",
-    " /|oIz 4 robuxx",
-    "goon in  /|oIz",
-    "/|oIz for fun",
-    " /|oIz for friends"
+    "hop in /LOLS for ekittens",
+    "bored?? /LOLS and chat",
+    "/LOLZ  4 nitro",
+    "/LOLS 4 headless",
+    "BEEF IN /LOLS",
+    " /LOLS 4 robuxx",
+    "goon in  /LOLS",
+    "/LOLS for fun",
+    " /LOLS for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
