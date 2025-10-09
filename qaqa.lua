@@ -21,6 +21,11 @@ else
     warn("Executor does not support setfpscap!")
 end
 
+
+-- === MUTE ALL SOUNDS (DONT MODIFY ANYTHING) ===
+game.SoundService.Volume = 0
+
+
 -- === TOGGLES ===
 _G.AutoSay = true
 _G.AutoTP = true
