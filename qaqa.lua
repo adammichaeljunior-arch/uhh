@@ -13,12 +13,6 @@ local chatDelay = 2.5
 local tpDelay = 6
 local overlayDelay = 3 -- seconds before showing overlay
 
--- === FPS CAP ===
-if setfpscap then
-    setfpscap(6) -- Change this to your desired FPS
-else
-    warn("Executor does not support setfpscap!")
-end
 
 
 -- === TOGGLES ===
@@ -39,6 +33,13 @@ local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
+
+-- === FPS CAP ===
+if setfpscap then
+    setfpscap(6) -- Change this to your desired FPS
+else
+    warn("Executor does not support setfpscap!")
+end
 
 -- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
 local function sendWebhook(content, title, color)
