@@ -1,197 +1,276 @@
--- Robust server-hopper + reattach bootstrap
--- Supports syn.queue_on_teleport, generic queue_on_teleport, fluxus, and a writefile/readfile fallback.
+-- === SETTINGS ===
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
--- ============ CONFIG ============
 local messages = {
-    "hop in /LOLZ for ekittens",
-    "bored?? /LOLZ and chat",
-    "/LOLZ  4 nitro",
+    "join /LOLZ for egirls",
+    "join /LOLZ 4 nitro",
     "/LOLZ 4 headless",
-    "BEEF IN /LOLZ",
-    "/LOLZ 4 robuxx",
-    "goon in  /LOLZ",
-    "/LOLZ for fun",
-    " /LOLZ for friends"
+    "goon in /LOLZ",
+    "join /LOLZ 4 eheadd",
+    "join /LOLZ for friends"
 }
-local fpsCap = 5
-local loader_url = "https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"
--- ================================
+local chatDelay = 2.5
+local tpDelay = 6
+local overlayDelay = 3 -- seconds before showing overlay
 
--- Cap FPS (if executor provides)
-if setfpscap then
-    pcall(function() setfpscap(fpsCap) end)
+-- === TOGGLES ===
+_G.AutoSay = true
+_G.AutoTP = true
+_G.AutoEmote = true
+_G.CPUSaver = true
+
+-- === SERVICES ===
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TextChatService = game:GetService("TextChatService")
+local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+local channel = nil
+pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
+
+-- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
+local function sendWebhook(content, title, color)
+    if not content then return false end
+    color = color or 16711680 -- default red
+    title = title or "Notification"
+    
+    local payload = {
+        embeds = {{
+            title = title,
+            description = content,
+            color = color,
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO format
+        }}
+    }
+
+    local requestBody = {
+        Url = WEBHOOK_URL,
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json" },
+        Body = HttpService:JSONEncode(payload),
+    }
+
+    if syn and syn.request then return syn.request(requestBody) end
+    if http_request then return http_request(requestBody) end
+    if http and http.request then return http.request(requestBody) end
+    if request then return request(requestBody) end
 end
 
--- Extreme GPU saver (optional)
-if _G.CPUSaver ~= false then
+-- === CHAT HELPER ===
+local lastMessageTime = 0
+local function sendChat(msg)
+    if not channel then return end
+    local ok = pcall(function()
+        channel:SendAsync(msg)
+    end)
+    if ok then lastMessageTime = os.time() end
+end
+
+-- === UI CREATION ===
+local overlay = Instance.new("ScreenGui")
+overlay.Name = "FancyOverlay"
+overlay.IgnoreGuiInset = true
+overlay.ResetOnSpawn = false
+overlay.Parent = player:WaitForChild("PlayerGui")
+
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+background.BorderSizePixel = 0
+background.Visible = false
+background.Parent = overlay
+
+-- main panel
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0.5, 0, 0.5, 0)
+panel.Position = UDim2.new(0.25, 0, 0.25, 0)
+panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+panel.BorderSizePixel = 0
+panel.Parent = background
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 12)
+uiCorner.Parent = panel
+
+-- title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.15, 0)
+title.BackgroundTransparency = 1
+title.Text = "🌐 Auto System Overlay"
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(200,200,200)
+title.Parent = panel
+
+-- info section
+local info = Instance.new("TextLabel")
+info.Size = UDim2.new(1, -20, 0.8, -20)
+info.Position = UDim2.new(0, 10, 0.18, 0)
+info.BackgroundTransparency = 1
+info.Font = Enum.Font.Gotham
+info.TextScaled = true
+info.TextWrapped = true
+info.TextColor3 = Color3.fromRGB(180,180,180)
+info.TextXAlignment = Enum.TextXAlignment.Left
+info.TextYAlignment = Enum.TextYAlignment.Top
+info.Text = "Loading..."
+info.Parent = panel
+
+-- show overlay after delay
+task.delay(overlayDelay, function()
+    background.Visible = true
+end)
+
+-- === CPU SAVER ===
+if _G.CPUSaver then
     pcall(function()
-        if settings and settings().Rendering then
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        end
-        game:GetService("RunService"):Set3dRenderingEnabled(false)
-        local Lighting = game:GetService("Lighting")
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        RunService:Set3dRenderingEnabled(false)
         Lighting.GlobalShadows = false
         Lighting.Brightness = 0
         Lighting.FogEnd = 9e9
         Lighting.Ambient = Color3.new(0,0,0)
         Lighting.OutdoorAmbient = Color3.new(0,0,0)
     end)
-end
-
-local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
-local player = Players.LocalPlayer
-if not player then
-    Players.PlayerAdded:Wait()
-    player = Players.LocalPlayer
-end
-
--- Robust queue-on-teleport helper:
--- It will try multiple common executor APIs. It queues code which will run on the next server.
-local function queue_on_teleport_robust(code)
-    -- code must be a string of Lua code that can run on the next server.
-    local succeeded = false
-    local success, err
-
-    -- synapse vX
-    if type(syn) == "table" and syn.queue_on_teleport then
-        success, err = pcall(function() syn.queue_on_teleport(code) end)
-        succeeded = success or succeeded
-    end
-
-    -- generic global queue_on_teleport (some executors expose this global)
-    if not succeeded and type(queue_on_teleport) == "function" then
-        success, err = pcall(function() queue_on_teleport(code) end)
-        succeeded = success or succeeded
-    end
-
-    -- fluxus style
-    if not succeeded and type(fluxus) == "table" and fluxus.queue_on_teleport then
-        success, err = pcall(function() fluxus.queue_on_teleport(code) end)
-        succeeded = success or succeeded
-    end
-
-    -- fallback: write the payload to disk (if available) and queue a small loader that reads file on next boot
-    if not succeeded and type(writefile) == "function" and type(isfile) == "function" and type(readfile) == "function" then
-        pcall(function()
-            writefile("qaqa_bootstrap.lua", code)
-        end)
-        local disk_loader = "if isfile('qaqa_bootstrap.lua') then pcall(function() loadstring(readfile('qaqa_bootstrap.lua'))() end) end"
-        if type(syn) == "table" and syn.queue_on_teleport then
-            pcall(function() syn.queue_on_teleport(disk_loader) end)
-            succeeded = true
-        elseif type(queue_on_teleport) == "function" then
-            pcall(function() queue_on_teleport(disk_loader) end)
-            succeeded = true
+    task.spawn(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
         end
-    end
-
-    return succeeded
+        workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end)
+    end)
 end
 
--- Prepare the loader payload string (safe-quoted)
-local loader_payload = "pcall(function() loadstring(game:HttpGet(\"" .. loader_url .. "\"))() end)"
+-- === QUEUE SCRIPT ===
+local function queueScript()
+    local SRC = [[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"))()
+    ]]
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(SRC)
+    elseif queue_on_teleport then
+        queue_on_teleport(SRC)
+    end
+end
 
--- Robust send chat (TextChatService first, fallback to legacy chat event)
-local function sendChat(msg)
-    local ok, err = pcall(function()
-        local TextChatService = game:GetService("TextChatService")
-        if TextChatService then
-            local success, channel = pcall(function()
-                return TextChatService:WaitForChild("RBXGeneral", 3)
-            end)
-            if success and channel and channel.SendAsync then
-                channel:SendAsync(msg)
-                return
+-- === SERVER HOP ===
+local function serverHop(reason)
+    info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
+    sendWebhook(
+        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+        "🌐 Server Hop",
+        3447003 -- blue
+    )
+
+    queueScript()
+
+    local success, body = pcall(function()
+        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+    end)
+    if success then
+        local data = HttpService:JSONDecode(body)
+        if data and data.data then
+            for _, server in ipairs(data.data) do
+                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                    return
+                end
             end
         end
+    end
+    TeleportService:Teleport(game.PlaceId, player)
+end
 
-        -- fallback: DefaultChatSystemChatEvents
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local DefaultChat = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-        if DefaultChat and DefaultChat:FindFirstChild("SayMessageRequest") then
-            DefaultChat.SayMessageRequest:FireServer(msg, "All")
-            return
-        end
+-- === MOD DETECTION ===
+local MOD_IDS = {
+    419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
+    7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
+    103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474
+}
 
-        -- last resort: try Chat service (may not be available in all games)
-        local ChatService = game:GetService("Chat")
-        if ChatService and ChatService.Chat then
-            -- This is a Hail-Mary — not guaranteed to work in all games
-            pcall(function() ChatService:Chat(player.Character and player.Character:FindFirstChild("Head") or player.Character, msg, Enum.ChatColor.Red) end)
-            return
+local function checkForMods(pl)
+    for _, id in ipairs(MOD_IDS) do
+        if pl.UserId == id then
+            sendWebhook(
+                "🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")",
+                "⚠️ Mod Alert",
+                16711680 -- red
+            )
+            serverHop("Mod detected: " .. pl.Name)
+            break
         end
-    end)
-    if not ok then
-        warn("sendChat failed:", err)
     end
 end
 
--- Get other players with HRP
-local function getOtherPlayers()
-    local t = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            table.insert(t, p)
-        end
-    end
-    return t
-end
+for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
+Players.PlayerAdded:Connect(checkForMods)
 
--- Load your custom script immediately (bootstrap)
-pcall(function()
-    loadstring(game:HttpGet(loader_url))()
+-- === AUTO CHAT LOOP ===
+task.spawn(function()
+    task.wait(3)
+    local i = 1
+    while _G.AutoSay do
+        sendChat(messages[i])
+        i = (i % #messages) + 1
+        task.wait(chatDelay + math.random())
+    end
 end)
 
--- Helper: get position directly in front of target facing them
-local function getFrontCFrame(targetHRP)
-    local offset = targetHRP.CFrame.LookVector * 3 -- 3 studs in front
-    local position = targetHRP.CFrame.Position + offset
-    return CFrame.new(position, targetHRP.CFrame.Position)
-end
-
--- Main cycle
-local function main()
-    while true do
-        local targets = getOtherPlayers()
-        if #targets == 0 then
-            -- No players, queue loader and hop server
-            local ok = queue_on_teleport_robust(loader_payload)
-            if not ok then
-                warn("queue_on_teleport failed: your executor may not support queueing. If possible use Synapse/Krnl/Fluxus or ensure writefile/readfile exist.")
+-- === AUTO TELEPORT LOOP ===
+task.spawn(function()
+    while _G.AutoTP do
+        local allPlayers = {}
+        for _, pl in ipairs(Players:GetPlayers()) do
+            if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+                table.insert(allPlayers, pl)
             end
-            wait(0.12) -- small buffer to allow queue to register
-            pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
+        end
+
+        if #allPlayers < 1 then
+            info.Text = "⚠️ No players found. Hopping..."
+            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960) -- yellow
+            serverHop("Empty server")
             return
         end
 
-        for _, p in ipairs(targets) do
-            local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
-            local hrpPlayer = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if hrp and hrpPlayer then
-                -- safe pcall in case changing CFrame is blocked by the server or anti-cheat
-                pcall(function()
-                    hrpPlayer.CFrame = getFrontCFrame(hrp)
+        local reached = {}
+        for _, target in ipairs(allPlayers) do
+            info.Text = string.format(
+                "👤 User: %s (%s)\n🎯 Target: %s\n👥 Players left: %d\n🗂 JobId: %s\n",
+                player.Name, player.DisplayName,
+                target.DisplayName or target.Name,
+                #allPlayers - #reached,
+                string.sub(game.JobId,1,8) .. "..."
+            )
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and hrp then
+                hrp.CFrame = CFrame.new(
+                    target.Character.HumanoidRootPart.Position + target.Character.HumanoidRootPart.CFrame.LookVector*3,
+                    target.Character.HumanoidRootPart.Position
+                )
+            end
+
+            if _G.AutoEmote then
+                task.spawn(function()
+                    for _ = 1, math.floor(tpDelay/0.5) do
+                        sendChat("/e point")
+                        task.wait(0.5)
+                    end
                 end)
             end
 
-            -- Spam message & emote (be careful: spamming may trigger moderation/anti-cheat)
-            sendChat(messages[math.random(#messages)])
-            sendChat("/e point")
-            wait(3)
+            table.insert(reached, target)
+            task.wait(tpDelay + 3)
         end
 
-        -- After visiting all players, queue and hop server
-        local ok = queue_on_teleport_robust(loader_payload)
-        if not ok then
-            warn("queue_on_teleport failed before final teleport.")
-        end
-        wait(0.12)
-        pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
-        return
+        info.Text = "🔄 Finished all players. Hopping..."
+        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280) -- green
+        serverHop("Rotation after reaching players")
+        task.wait(1)
     end
-end
-
--- Run the main cycle
-coroutine.wrap(main)()
+end)
