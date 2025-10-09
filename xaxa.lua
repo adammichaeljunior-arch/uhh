@@ -7,7 +7,6 @@ else
     warn("Executor does not support setfpscap!")
 end
 
-
 local messages = {
     "join /LOLZ for ekittens",
     "bored?? join /LOLZ and chat",
@@ -349,6 +348,13 @@ Players.PlayerAdded:Connect(function(p)
 end)
 
 
+-- === Anti-AFK Script ===
+local VirtualUser = game:GetService("VirtualUser")
+game:GetService("UserInputService").Idled:Connect(function()
+    VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+end)
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
