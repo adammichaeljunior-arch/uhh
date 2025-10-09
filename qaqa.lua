@@ -36,15 +36,18 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 
--- Queue on teleport
-local function queueOnTeleport()
-    local code = [[ loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"))() ]]
+-- === QUEUE SCRIPT ===
+local function queueScript()
+    local SRC = [[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"))()
+    ]]
     if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport(code)
+        syn.queue_on_teleport(SRC)
     elseif queue_on_teleport then
-        queue_on_teleport(code)
+        queue_on_teleport(SRC)
     end
 end
+
 
 -- Send chat message
 local function sendChat(msg)
