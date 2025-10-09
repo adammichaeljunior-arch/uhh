@@ -10,13 +10,12 @@ end
 
 
 local messages = {
-    "join /LOLZ for egirls",
-    "join /LOLZ 4 nitro",
-    "/LOLZ 4 headless",
-    "goon in /LOLZ",
-    "join /LOLZ 4 eheadd",
-    "join /LOLZ for friends"
+    "LOLZ for egirls on blue ap",
+    "LOLZ on blue ap",
+    "LOLZ 4 nitro on blue ap",
+    "LOLZ 4robux on blue ap"
 }
+
 local chatDelay = 2.5
 local tpDelay = 6
 local overlayDelay = 3 -- seconds before showing overlay
