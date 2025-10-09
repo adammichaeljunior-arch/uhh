@@ -165,6 +165,7 @@ local function queueScript()
 end
 
 -- === SERVER HOP ===
+-- === SERVER HOP (error 773 fixed) ===
 local function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
     sendWebhook(
@@ -174,22 +175,46 @@ local function serverHop(reason)
         3447003 -- blue
     )
 
+    -- requeue the script before teleport
     queueScript()
 
-    local success, body = pcall(function()
-        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+    local function safeTeleportToServer(serverId)
+        local ok, err = pcall(function()
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, serverId, player)
+        end)
+        if not ok then
+            warn("Teleport failed for server " .. tostring(serverId) .. ": " .. tostring(err))
+        end
+        return ok
+    end
+
+    -- Try public servers from Roblox API
+    local ok, body = pcall(function()
+        return game:HttpGet(
+            ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(game.PlaceId)
+        )
     end)
-    if success then
+
+    if ok then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
             for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                    return
+                if server.id ~= game.JobId and server.playing < server.maxPlayers and server.playing >= 5 then
+                    local joined = safeTeleportToServer(server.id)
+                    if joined then
+                        return -- successful teleport
+                    else
+                        task.wait(0.25) -- short wait before next attempt
+                    end
                 end
             end
         end
+    else
+        warn("Failed to fetch server list:", body)
     end
+
+    -- Final fallback: let Roblox pick a random public server (always works)
+    info.Text = "⚙️ Falling back to random public server..."
     TeleportService:Teleport(game.PlaceId, player)
 end
 
