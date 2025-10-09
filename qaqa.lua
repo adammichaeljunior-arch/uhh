@@ -14,13 +14,11 @@ local tpDelay = 6
 local overlayDelay = 3 -- seconds before showing overlay
 
 
-
 -- === TOGGLES ===
 _G.AutoSay = true
 _G.AutoTP = true
 _G.AutoEmote = true
 _G.CPUSaver = true
-
 
 -- === SERVICES ===
 local Players = game:GetService("Players")
@@ -33,6 +31,15 @@ local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
+
+
+
+-- === FPS CAP ===
+if setfpscap then
+    setfpscap(6) -- Change this to your desired FPS
+else
+    warn("Executor does not support setfpscap!")
+end
 
 -- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
 local function sendWebhook(content, title, color)
@@ -71,9 +78,6 @@ local function sendChat(msg)
     end)
     if ok then lastMessageTime = os.time() end
 end
-
-
--- hi
 
 -- === UI CREATION ===
 local overlay = Instance.new("ScreenGui")
@@ -226,8 +230,6 @@ task.spawn(function()
         task.wait(chatDelay + math.random())
     end
 end)
-
-
 
 -- === AUTO TELEPORT LOOP ===
 task.spawn(function()
