@@ -14,7 +14,7 @@ local messages = {
     "hop in /LOLZ for ekittens",
     "bored?? /LOLZ and chat",
     "/LOLZ  4 nitro",
-    "/LOLS 4 headless",
+    "/LOLZ 4 headless",
     "BEEF IN /LOLZ",
     " /LOLZ 4 robuxx",
     "goon in  /LOLZ",
