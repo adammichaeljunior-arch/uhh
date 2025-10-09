@@ -215,54 +215,74 @@ end
 
 -- Main function
 local function serverHop(reason)
-	info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
+    info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
+    sendWebhook(
+        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+            :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+        "🌐 Server Hop",
+        3447003
+    )
 
-	sendWebhook(
-		("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-			:format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
-		"🌐 Server Hop",
-		3447003
-	)
+    -- Helper: get a list of servers
+    local function getAvailableServers()
+        local success, body = pcall(function()
+            return game:HttpGet(
+                ("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100"):format(game.PlaceId)
+            )
+        end)
+        if not success then return {} end
+        local data = HttpService:JSONDecode(body)
+        if not data or not data.data then return {} end
+        local servers = {}
+        for _, server in ipairs(data.data) do
+            if server.id ~= game.JobId and server.playing < server.maxPlayers then
+                table.insert(servers, server)
+            end
+        end
+        return servers
+    end
 
-	queueScript()
+    -- Pick a random server from list
+    local function pickRandomServer()
+        local servers = getAvailableServers()
+        if #servers == 0 then return nil end
+        return servers[math.random(1, #servers)]
+    end
 
-	local attempt = 0
-	while attempt < 6 do
-		attempt += 1
-		local servers = getAvailableServers(10)
-		if #servers == 0 then
-			warn("[ServerHop] No suitable servers found (attempt " .. attempt .. "). Retrying in 3s...")
-			task.wait(3)
-			continue
-		end
+    local server = pickRandomServer()
+    if not server then
+        warn("No servers available to join.")
+        return
+    end
 
-		local target = servers[math.random(1, #servers)]
-		print("[ServerHop] Attempting teleport to:", target.id)
+    -- Try teleport to server
+    local success, err = pcall(function()
+        lastServerId = game.JobId
+        if writefile then
+            writefile("lastServerId.txt", game.JobId)
+        end
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+    end)
 
-		local success, err = pcall(function()
-			-- Save last server before teleport
-			lastServerId = game.JobId
-			if writefile then
-				writefile(DATA_FILE, game.JobId)
-			end
-			TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
-		end)
-
-		if success then
-			return
-		else
-			warn("[ServerHop] Teleport failed:", err)
-			task.wait(2)
-		end
-	end
-
-	-- Fallback
-	warn("[ServerHop] All attempts failed, teleporting to new instance...")
-	if writefile then
-		writefile(DATA_FILE, game.JobId)
-	end
-	lastServerId = game.JobId
-	TeleportService:Teleport(game.PlaceId, player)
+    if not success then
+        -- Wait a bit before trying again
+        wait(2)
+        local server2 = pickRandomServer()
+        if server2 then
+            local success2, err2 = pcall(function()
+                lastServerId = game.JobId
+                if writefile then
+                    writefile("lastServerId.txt", game.JobId)
+                end
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, server2.id, player)
+            end)
+            if not success2 then
+                warn("Second teleport attempt failed: " .. err2)
+            end
+        else
+            warn("No second server to try.")
+        end
+    end
 end
 
 
