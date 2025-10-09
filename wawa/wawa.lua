@@ -11,6 +11,12 @@ local messages = {
   
 }
 
+if setfpscap then
+    setfpscap(6) -- Change this value to your desired FPS
+else
+    warn("Executor does not support setfpscap!")
+end
+
 
 local chatDelay = 2.5
 local tpDelay = 6
