@@ -36,15 +36,6 @@ local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
-
-
--- === FPS CAP ===
-if setfpscap then
-    setfpscap(6) -- Change this to your desired FPS
-else
-    warn("Executor does not support setfpscap!")
-end
-
 -- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
 local function sendWebhook(content, title, color)
     if not content then return false end
@@ -81,6 +72,16 @@ local function sendChat(msg)
         channel:SendAsync(msg)
     end)
     if ok then lastMessageTime = os.time() end
+end
+
+
+-- hi
+
+-- === FPS CAP ===
+if setfpscap then
+    setfpscap(6) -- Change this to your desired FPS
+else
+    warn("Executor does not support setfpscap!")
 end
 
 -- === UI CREATION ===
