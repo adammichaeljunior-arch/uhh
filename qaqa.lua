@@ -1,26 +1,14 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
--- FPS cap
-if setfpscap then
-    setfpscap(6) 
-else
-    warn("Executor does not support setfpscap!")
-end
-
-
 local messages = {
-    "join /LOLZ for ekittens",
-    "bored?? join /LOLZ and chat",
-    "join /LOLZ  4 nitro",
+    "join /LOLZ for fansignss",
+    "join /LOLZ 4 nitro",
     "/LOLZ 4 headless",
-    "Face 4 Face (polls) active in /LOLZ",
-    "join  /LOLZ 4 robuxx",
-    "goon in  /LOLZ",
-    "join  /LOLZ for fun",
-    "join  /LOLZ for friends"
+    "goon in /LOLZ",
+    "join /LOLZ 4 eheadd",
+    "join /LOLZ for friends"
 }
-
 local chatDelay = 2.5
 local tpDelay = 6
 local overlayDelay = 3 -- seconds before showing overlay
@@ -170,7 +158,6 @@ local function queueScript()
 end
 
 -- === SERVER HOP ===
--- === SERVER HOP (error 773 fixed) ===
 local function serverHop(reason)
     info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
     sendWebhook(
@@ -180,46 +167,22 @@ local function serverHop(reason)
         3447003 -- blue
     )
 
-    -- requeue the script before teleport
     queueScript()
 
-    local function safeTeleportToServer(serverId)
-        local ok, err = pcall(function()
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, serverId, player)
-        end)
-        if not ok then
-            warn("Teleport failed for server " .. tostring(serverId) .. ": " .. tostring(err))
-        end
-        return ok
-    end
-
-    -- Try public servers from Roblox API
-    local ok, body = pcall(function()
-        return game:HttpGet(
-            ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(game.PlaceId)
-        )
+    local success, body = pcall(function()
+        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
-
-    if ok then
+    if success then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
             for _, server in ipairs(data.data) do
-                if server.id ~= game.JobId and server.playing < server.maxPlayers and server.playing >= 5 then
-                    local joined = safeTeleportToServer(server.id)
-                    if joined then
-                        return -- successful teleport
-                    else
-                        task.wait(0.25) -- short wait before next attempt
-                    end
+                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                    return
                 end
             end
         end
-    else
-        warn("Failed to fetch server list:", body)
     end
-
-    -- Final fallback: let Roblox pick a random public server (always works)
-    info.Text = "⚙️ Falling back to random public server..."
     TeleportService:Teleport(game.PlaceId, player)
 end
 
