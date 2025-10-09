@@ -111,19 +111,21 @@ local function serverHop()
     local success, body = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
     end)
-    
-    if success then
+
+    if success and body then
         local data = HttpService:JSONDecode(body)
         if data and data.data then
-            for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                    return
-                end
+            local servers = data.data
+            if #servers > 0 then
+                local randomServer = servers[math.random(1, #servers)]
+                -- Teleport to a random server
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer.id, player)
+                return
             end
         end
     end
 
+    -- Fallback: teleport to current place if no servers found
     TeleportService:Teleport(game.PlaceId, player)
 end
 
