@@ -7,6 +7,7 @@ else
     warn("Executor does not support setfpscap!")
 end
 
+
 local messages = {
     "join /LOLZ for ekittens",
     "bored?? join /LOLZ and chat",
@@ -347,6 +348,8 @@ Players.PlayerAdded:Connect(function(p)
     end
 end)
 
+
+
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
     task.wait(3)
@@ -411,3 +414,4 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+
