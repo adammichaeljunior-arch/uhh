@@ -13,6 +13,13 @@ local chatDelay = 2.5
 local tpDelay = 6
 local overlayDelay = 3 -- seconds before showing overlay
 
+-- === FPS CAP ===
+if setfpscap then
+    setfpscap(6) -- Change this to your desired FPS
+else
+    warn("Executor does not support setfpscap!")
+end
+
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -20,12 +27,6 @@ _G.AutoTP = true
 _G.AutoEmote = true
 _G.CPUSaver = true
 
--- === FPS CAP ===
-if setfpscap then
-    setfpscap(6) -- Change this to your desired FPS
-else
-    warn("Executor does not support setfpscap!")
-end
 
 -- === SERVICES ===
 local Players = game:GetService("Players")
