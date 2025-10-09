@@ -8,7 +8,7 @@ else
 end
 --by chat gpt ;)
 
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hassanxzayn-lua/Anti-afk/main/antiafkbyhassanxzyn"))();
 
 
 
