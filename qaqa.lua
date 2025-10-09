@@ -10,10 +10,15 @@ end
 
 
 local messages = {
-    "LOLZ for egirls on blue ap",
-    "LOLZ on blue ap",
-    "LOLZ 4 nitro on blue ap",
-    "LOLZ 4robux on blue ap"
+    "join /LOLZ for ekittens",
+    "bored?? join /LOLZ and chat",
+    "join /LOLZ  4 nitro",
+    "/LOLZ 4 headless",
+    "Face 4 Face (polls) active in /LOLZ",
+    "join  /LOLZ 4 robuxx",
+    "goon in  /LOLZ",
+    "join  /LOLZ for fun",
+    "join  /LOLZ for friends"
 }
 
 local chatDelay = 2.5
