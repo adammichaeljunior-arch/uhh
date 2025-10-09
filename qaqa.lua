@@ -1,12 +1,6 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
-if setfpscap then
-    setfpscap(8) -- Change this value to your desired FPS
-else
-    warn("Executor does not support setfpscap!")
-end
-
 local messages = {
     "join /LOLZ for fansignss",
     "join /LOLZ 4 nitro",
