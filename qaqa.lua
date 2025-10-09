@@ -5,6 +5,7 @@ if setfpscap then
     setfpscap(8) -- Change this value to your desired FPS
 else
     warn("Executor does not support setfpscap!")
+end
 
 local messages = {
     "join /LOLZ for fansignss",
