@@ -9,7 +9,7 @@ end
 
 
 local messages = {
-    "LOLZ\ for ekittens",
+    'LOLZ\ for ekittens',
     "bored?? get active in LOLZ\ and chat",
     "LOLZ\  4 nitro",
     "LOLZ\ 4 headless",
