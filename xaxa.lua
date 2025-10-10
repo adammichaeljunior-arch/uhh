@@ -9,14 +9,14 @@ end
 
 
 local messages = {
-    'LOLZ\ for ekittens',
-    "bored?? get active in LOLZ\ and chat",
-    "LOLZ\  4 nitro",
-    "LOLZ\ 4 headless",
-    "LOLZ\",
-    " LOLZ\ 4 robuxx",
-    "goon in  LOLZ\",
-    "\LOLZ for friends"
+    "LOLZ\\ for ekittens",
+    "bored?? get active in LOLZ\\ and chat",
+    "LOLZ\\  4 nitro",
+    "LOLZ\\ 4 headless",
+    "LOLZ\\",
+    " LOLZ\\ 4 robuxx",
+    "goon in  LOLZ\\",
+    "LOLZ\\ for friends"
 }
 local chatDelay = 6.5
 local tpDelay = 5
