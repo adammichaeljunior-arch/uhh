@@ -9,17 +9,16 @@ end
 
 
 local messages = {
-    "join /LOLZ for ekittens",
-    "bored?? join /LOLZ and chat",
-    "join /LOLZ  4 nitro",
-    "/LOLZ 4 headless",
-    "Face 4 Face (polls) active in /LOLZ",
-    "join  /LOLZ 4 robuxx",
-    "goon in  /LOLZ",
-    "join  /LOLZ for fun",
-    "join  /LOLZ for friends"
+    "LOLZ\ for ekittens",
+    "bored?? get active in LOLZ\ and chat",
+    "LOLZ\  4 nitro",
+    "LOLZ\ 4 headless",
+    "LOLZ\",
+    " LOLZ\ 4 robuxx",
+    "goon in  LOLZ\",
+    "\LOLZ for friends"
 }
-local chatDelay = 3.5
+local chatDelay = 6.5
 local tpDelay = 5
 local overlayDelay = 1 -- seconds before showing overlay
 
