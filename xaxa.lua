@@ -287,10 +287,6 @@ end
 for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
 Players.PlayerAdded:Connect(checkForMods)
 
--- AUTO
--- safe alt-detection snippet (ignores the local player)
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
 
 -- Spam detection parameters
 local spamThreshold = 3 -- number of repeated messages
@@ -331,21 +327,6 @@ sendChat = function(msg)
         return
     end
     originalSendChat(msg)
-end
-
--- returns (foundBoolean, playerObject or nil)
-local function findOtherAltInServer()
-    for _, pl in ipairs(Players:GetPlayers()) do
-        -- skip the local player explicitly
-        if pl.UserId ~= localPlayer.UserId then
-            for _, id in ipairs(ALT_IDS) do
-                if pl.UserId == id then
-                    return true, pl
-                end
-            end
-        end
-    end
-    return false, nil
 end
 
 -- Example usage: check once now and when new players join, and notify
