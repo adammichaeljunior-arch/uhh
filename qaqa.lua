@@ -4,6 +4,7 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25i
 local messages = {
     "get ACTIVE IN /LOLZ",
     "join /LOLZ 4 nitro",
+    "best NON-COM server /LOLZ",
     "/LOLZ 4 headless",
     "goon in /LOLZ",
     "join /LOLZ 4 Ekittens",
