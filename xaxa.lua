@@ -329,34 +329,6 @@ sendChat = function(msg)
     originalSendChat(msg)
 end
 
--- Example usage: check once now and when new players join, and notify
-local function onAltDetected(pl)
-    -- pl is the Player object of the detected alt
-    if pl and pl.Name then
-        -- safe notification — do not auto-hop or auto-evade
-        print(("Alt detected in server: %s (id=%d)"):format(pl.Name, pl.UserId))
-        if overlayLabel then
-            overlayLabel.Text = ("⚠️ Alt detected: %s — please avoid duplicate actions"):format(pl.Name)
-        end
-        -- optionally show a popup or enable a manual button for a human to act
-    end
-end
-
--- initial check
-local found, detected = findOtherAltInServer()
-if found then onAltDetected(detected) end
-
--- watch for new players (will ignore local player automatically)
-Players.PlayerAdded:Connect(function(p)
-    task.wait(0.5) -- small delay so properties replicate
-    for _, id in ipairs(ALT_IDS) do
-        if p.UserId == id and p.UserId ~= localPlayer.UserId then
-            onAltDetected(p)
-            break
-        end
-    end
-end)
-
 
 
 -- === AUTO CHAT LOOP ===
