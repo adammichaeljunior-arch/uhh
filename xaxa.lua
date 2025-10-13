@@ -9,13 +9,13 @@ end
 
 
 local messages = {
-    "gg.LOLZ for ekittens",
-    "bored?? get active in gg.LOLZ and chat",
-    "gg.LOLZ  4 nitro",
-    "gg.LOLZ 4 headless",
-    " gg.LOLZ 4 robuxx",
-    "goon in  gg.LOLZ",
-    "gg.LOLZ for friends"
+    "gg.\\\\LOLZ for ekittens",
+    "bored?? get active in gg.\\\\LOLZ and chat",
+    "gg.\\\\LOLZ  4 nitro",
+    "gg.\\\\LOLZ 4 headless",
+    " gg.\\\\LOLZ 4 robuxx",
+    "goon in  gg.\\\\LOLZ",
+    "gg.\\\\LOLZ for friends"
 }
 local chatDelay = 6.5
 local tpDelay = 5
@@ -394,4 +394,3 @@ task.spawn(function()
         task.wait(1)
     end
 end)
-
