@@ -9,7 +9,7 @@ local messages = {
     "join /LOLZ for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 4
+local tpDelay = 3
 local overlayDelay = 3 -- seconds before showing overlay
 
 
