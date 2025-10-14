@@ -275,7 +275,7 @@ task.spawn(function()
             end
 
             table.insert(reached, target)
-            task.wait(tpDelay + 2)
+            task.wait(tpDelay + 1)
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
