@@ -166,33 +166,90 @@ local function queueScript()
     end
 end
 
--- === SERVER HOP ===
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local lastServerId = nil
+local MIN_PLAYERS = 10 -- minimum number of players required
+
+local function getPublicServers(placeId)
+	local servers = {}
+	local cursor = ""
+
+	repeat
+		local success, result = pcall(function()
+			return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or ""))
+		end)
+
+		if success then
+			local data = HttpService:JSONDecode(result)
+			if data and data.data then
+				for _, server in ipairs(data.data) do
+					table.insert(servers, server)
+				end
+			end
+			cursor = data.nextPageCursor or ""
+		else
+			warn("[ServerHop] Failed to fetch server list.")
+			break
+		end
+
+		task.wait(0.5)
+	until cursor == "" or #servers >= 400 -- cap pages for safety
+
+	return servers
+end
+
 local function serverHop(reason)
-    info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
-    sendWebhook(
-        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
-        "🌐 Server Hop",
-        3447003 -- blue
-    )
+	info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
 
-    queueScript()
+	sendWebhook(
+		("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+		:format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+		"🌐 Server Hop",
+		3447003
+	)
 
-    local success, body = pcall(function()
-        return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
-    end)
-    if success then
-        local data = HttpService:JSONDecode(body)
-        if data and data.data then
-            for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-                    return
-                end
-            end
-        end
-    end
-    TeleportService:Teleport(game.PlaceId, player)
+	queueScript()
+
+	local servers = getPublicServers(game.PlaceId)
+	if not servers or #servers == 0 then
+		warn("[ServerHop] No servers found.")
+		TeleportService:Teleport(game.PlaceId, player)
+		return
+	end
+
+	-- filter
+	local validServers = {}
+	for _, server in ipairs(servers) do
+		if server.playing < server.maxPlayers
+			and server.id ~= game.JobId
+			and server.id ~= lastServerId
+			and server.playing >= MIN_PLAYERS then
+			table.insert(validServers, server)
+		end
+	end
+
+	if #validServers == 0 then
+		warn("[ServerHop] No valid servers found, teleporting randomly.")
+		TeleportService:Teleport(game.PlaceId, player)
+		return
+	end
+
+	-- sort by activity (more players = higher priority)
+	table.sort(validServers, function(a, b)
+		return a.playing > b.playing
+	end)
+
+	-- pick from top few (adds randomness to avoid always same)
+	local topCount = math.min(5, #validServers)
+	local target = validServers[math.random(1, topCount)]
+	lastServerId = target.id
+
+	print(string.format("[ServerHop] Targeting active server %s (%d/%d)", target.id, target.playing, target.maxPlayers))
+	TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
 end
 
 -- === MOD DETECTION ===
