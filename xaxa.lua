@@ -9,16 +9,16 @@ end
 
 
 local messages = {
-    "gg.LoIz for ekittens",
-    "bored?? get active in gg.LoIz and chat",
-    "gg.LoIz  4 nitro",
-    "gg.LoIz 4 headless",
-    " gg.LoIz 4 robuxx",
-    "goon in  gg.LoIz",
-    "gg.LoIz for friends"
+    "/LOLZ for ekittens",
+    "bored?? get active in /LOLZ and chat",
+    "/LOLZ 4 nitro",
+    "/LOL 4 headless",
+    "/LOLZ 4 robuxx",
+    "goon in  /LOLZ",
+    "/LOLZ for friends"
 }
-local chatDelay = 6.5
-local tpDelay = 5
+local chatDelay = 2.5
+local tpDelay = 3
 local overlayDelay = 1 -- seconds before showing overlay
 
 -- === TOGGLES ===
