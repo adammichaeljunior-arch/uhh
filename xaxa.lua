@@ -17,7 +17,7 @@ local messages = {
     "goon in  gg\\LOLZ",
     "gg\\LOLZ for friends"
 }
-local chatDelay = 2.5
+local chatDelay = 3.5
 local tpDelay = 3
 local overlayDelay = 1 -- seconds before showing overlay
 
