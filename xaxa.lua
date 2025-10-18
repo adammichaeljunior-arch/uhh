@@ -1,25 +1,17 @@
 -- === SETTINGS ===
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
-if setfpscap then
-    setfpscap(20) -- Change this value to your desired FPS
-else
-    warn("Executor does not support setfpscap!")
-end
-
-
 local messages = {
-    "gg\\LOLZ for ekittens",
-    "bored?? get active in gg\\LOLZ and chat",
-    "gg\\LOLZ 4 nitro",
-    "gg\\LOLZ 4 headless",
-    "gg\\LOLZ 4 robuxx",
-    "goon in  gg\\LOLZ",
-    "gg\\LOLZ for friends"
+    "join gg\LOLZ 4 nitro",
+    "gg\LOLZ 4 headless",
+    "goon in gg\LOLZ",
+    "join gg\LOLZ 4 Ekittens",
+    "join gg\LOLZ for friends"
 }
-local chatDelay = 3.5
+local chatDelay = 2.5
 local tpDelay = 3
-local overlayDelay = 1 -- seconds before showing overlay
+local overlayDelay = 3 -- seconds before showing overlay
+
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -38,6 +30,15 @@ local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
+
+
+
+-- === FPS CAP ===
+if setfpscap then
+    setfpscap(6) -- Change this to your desired FPS
+else
+    warn("Executor does not support setfpscap!")
+end
 
 -- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
 local function sendWebhook(content, title, color)
@@ -156,7 +157,7 @@ end
 -- === QUEUE SCRIPT ===
 local function queueScript()
     local SRC = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/xaxa.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
@@ -165,108 +166,98 @@ local function queueScript()
     end
 end
 
--- === SERVER HOP (Persistent, No Back-to-Back Rejoin) ===
-local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
+
 local player = Players.LocalPlayer
-
-local DATA_FILE = "lastServerId.txt"
 local lastServerId = nil
+local MIN_PLAYERS = 10 -- minimum number of players required
 
--- Try to load last server ID from file (persistent memory)
-pcall(function()
-	if isfile and isfile(DATA_FILE) then
-		lastServerId = readfile(DATA_FILE)
-	end
-end)
-
--- Helper: fetch servers
-local function getAvailableServers(minPlayers)
-	local success, body = pcall(function()
-		return game:HttpGet(
-			("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100"):format(game.PlaceId)
-		)
-	end)
-
-	if not success then
-		warn("[ServerHop] Failed to fetch servers.")
-		return {}
-	end
-
-	local data = HttpService:JSONDecode(body)
-	if not data or not data.data then return {} end
-
+local function getPublicServers(placeId)
 	local servers = {}
-	for _, server in ipairs(data.data) do
-		if server.id ~= game.JobId
-			and server.id ~= lastServerId -- skip same server as last
-			and server.playing >= (minPlayers or 2)
-			and server.playing < server.maxPlayers then
-			table.insert(servers, server)
+	local cursor = ""
+
+	repeat
+		local success, result = pcall(function()
+			return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or ""))
+		end)
+
+		if success then
+			local data = HttpService:JSONDecode(result)
+			if data and data.data then
+				for _, server in ipairs(data.data) do
+					table.insert(servers, server)
+				end
+			end
+			cursor = data.nextPageCursor or ""
+		else
+			warn("[ServerHop] Failed to fetch server list.")
+			break
 		end
-	end
+
+		task.wait(0.5)
+	until cursor == "" or #servers >= 400 -- cap pages for safety
+
 	return servers
 end
 
--- Main function
 local function serverHop(reason)
 	info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
 
 	sendWebhook(
 		("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-			:format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+		:format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
 		"🌐 Server Hop",
 		3447003
 	)
 
 	queueScript()
 
-	local attempt = 0
-	while attempt < 6 do
-		attempt += 1
-		local servers = getAvailableServers(10)
-		if #servers == 0 then
-			warn("[ServerHop] No suitable servers found (attempt " .. attempt .. "). Retrying in 3s...")
-			task.wait(3)
-			continue
-		end
+	local servers = getPublicServers(game.PlaceId)
+	if not servers or #servers == 0 then
+		warn("[ServerHop] No servers found.")
+		TeleportService:Teleport(game.PlaceId, player)
+		return
+	end
 
-		local target = servers[math.random(1, #servers)]
-		print("[ServerHop] Attempting teleport to:", target.id)
-
-		local success, err = pcall(function()
-			-- Save last server before teleport
-			lastServerId = game.JobId
-			if writefile then
-				writefile(DATA_FILE, game.JobId)
-			end
-			TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
-		end)
-
-		if success then
-			return
-		else
-			warn("[ServerHop] Teleport failed:", err)
-			task.wait(2)
+	-- filter
+	local validServers = {}
+	for _, server in ipairs(servers) do
+		if server.playing < server.maxPlayers
+			and server.id ~= game.JobId
+			and server.id ~= lastServerId
+			and server.playing >= MIN_PLAYERS then
+			table.insert(validServers, server)
 		end
 	end
 
-	-- Fallback
-	warn("[ServerHop] All attempts failed, teleporting to new instance...")
-	if writefile then
-		writefile(DATA_FILE, game.JobId)
+	if #validServers == 0 then
+		warn("[ServerHop] No valid servers found, teleporting randomly.")
+		TeleportService:Teleport(game.PlaceId, player)
+		return
 	end
-	lastServerId = game.JobId
-	TeleportService:Teleport(game.PlaceId, player)
+
+	-- sort by activity (more players = higher priority)
+	table.sort(validServers, function(a, b)
+		return a.playing > b.playing
+	end)
+
+	-- pick from top few (adds randomness to avoid always same)
+	local topCount = math.min(5, #validServers)
+	local target = validServers[math.random(1, topCount)]
+	lastServerId = target.id
+
+	print(string.format("[ServerHop] Targeting active server %s (%d/%d)", target.id, target.playing, target.maxPlayers))
+	TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
 end
+
 -- === MOD DETECTION ===
 local MOD_IDS = {
     419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
-    7423673502, 3724230698, 418307435, 943340328, 37343237, 2862215389,
+    7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
     103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474,
-    9526977984, 9562355874, 8531293745, 9504701959, 9411319434, 9530045945,
-	4992470579, 337367059
+    4992470579, 103578797, 3724230698
 }
 
 local function checkForMods(pl)
@@ -285,50 +276,6 @@ end
 
 for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
 Players.PlayerAdded:Connect(checkForMods)
-
-
--- Spam detection parameters
-local spamThreshold = 3 -- number of repeated messages
-local spamTimeWindow = 10 -- seconds
-
-local recentMessages = {} -- {message = {count, firstTimestamp}}
-
-local function checkSpam(msg)
-    local currentTime = os.time()
-    if recentMessages[msg] then
-        local data = recentMessages[msg]
-        if currentTime - data.firstTimestamp <= spamTimeWindow then
-            data.count = data.count + 1
-            if data.count >= spamThreshold then
-                -- Spam detected, trigger server hop
-                warn("Spam detected: " .. msg)
-                sendWebhook("Spam detected: " .. msg, "⚠️ Spam Alert", 16711680)
-                serverHop("Spam detected in chat")
-                -- Reset after hopping
-                recentMessages = {}
-                return true
-            end
-        else
-            -- Reset count if outside time window
-            recentMessages[msg] = {count = 1, firstTimestamp = currentTime}
-        end
-    else
-        recentMessages[msg] = {count = 1, firstTimestamp = currentTime}
-    end
-    return false
-end
-
--- Override or hook into your sendChat function to include spam check
-local originalSendChat = sendChat
-sendChat = function(msg)
-    if checkSpam(msg) then
-        -- Spam detected, do not send message
-        return
-    end
-    originalSendChat(msg)
-end
-
-
 
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
@@ -385,7 +332,7 @@ task.spawn(function()
             end
 
             table.insert(reached, target)
-            task.wait(tpDelay + 3)
+            task.wait(tpDelay + 1)
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
@@ -394,3 +341,34 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+
+-- Add the auto mod check loop here
+task.spawn(function()
+    while true do
+        for _, pl in ipairs(Players:GetPlayers()) do
+            checkForMods(pl)
+        end
+        task.wait(1) -- check every 5 seconds
+    end
+end)
+
+local isHopping = false
+
+-- When teleporting (server hop)
+local function serverHop(reason)
+    isHopping = true
+    -- existing server hop code...
+    -- after teleport, reset flag after delay
+    task.delay(5, function()
+        isHopping = false
+    end)
+end
+
+-- Detect player removal (disconnect)
+local function onPlayerRemoving(player)
+    if player == Players.LocalPlayer and not isHopping then
+        -- Send plain text message pinging you
+        sendWebhook("@everyone The account has been disconnected.", "Disconnection Notice", 16711680)
+    end
+end
+Players.PlayerRemoving:Connect(onPlayerRemoving)
