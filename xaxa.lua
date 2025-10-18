@@ -2,15 +2,15 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join gg\\LOLZ 4 nitro",
-    "gg\\LOLZ 4 headless",
-    "goon in gg\\LOLZ",
-	"get active in gg\\\LOLZ"
-    "join gg\\LOLZ 4 Ekittens",
-    "join gg\\LOLZ for friends",
-	"join gg\\loIz 4 nitro",
+    "join gg\\LoIz 4 nitro",
+    "gg\\LoIz 4 headless",
+    "goon in gg\\LoIz",
+	"get active in gg\\\LoIz"
+    "join gg\\LoIz 4 Ekittens",
+    "join gg\\LoIz for friends",
+	"join gg\\Lolz 4 nitro",
     "gg\\loIz 4 headless",
-    "goon in gg\\loIz",
+    "goon in gg\\IoIz",
 	"get active in gg\\\loIz"
     "join gg\\loIz 4 Ekittens",
     "join gg\\loIz for friends"
