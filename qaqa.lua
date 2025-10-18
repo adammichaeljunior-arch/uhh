@@ -351,3 +351,12 @@ task.spawn(function()
         task.wait(1) -- check every 5 seconds
     end
 end)
+
+-- Add the disconnection detection at the very end
+local function onPlayerRemoving(player)
+    if player == Players.LocalPlayer then
+        sendWebhook("@everyone: The account has been disconnected.", "Disconnection Notice", 16711680)
+    end
+end
+
+Players.PlayerRemoving:Connect(onPlayerRemoving)
