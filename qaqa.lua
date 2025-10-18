@@ -341,3 +341,13 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+
+-- Add the auto mod check loop here
+task.spawn(function()
+    while true do
+        for _, pl in ipairs(Players:GetPlayers()) do
+            checkForMods(pl)
+        end
+        task.wait(1) -- check every 5 seconds
+    end
+end)
