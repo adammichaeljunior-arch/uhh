@@ -4,16 +4,16 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25i
 local messages = {
     "join gg\\LOLZ 4 nitro",
     "gg\\LOLZ 4 headless",
-    "goon in gg\\LoIz",
-	"get active in gg\\\LoIz",
-    "join gg\\LoIz 4 Ekittens",
-    "join gg\\LoIz for friends",
-	"join gg\\Lolz 4 nitro",
-    "gg\\loIz 4 headless",
-    "goon in gg\\IoIz",
-	"get active in gg\\\loIz",
+    "goon in gg\\LOLZ",
+	"get active in gg\\\LOLZ",
     "join gg\\LOLZ 4 Ekittens",
-    "join gg\\loIz for friends"
+    "join gg\\LOLZ for friends",
+	"join gg\\LOLZ 4 nitro",
+    "gg\\LOLZ 4 headless",
+    "goon in gg\\LOLZ",
+	"get active in gg\\\LOLZ",
+    "join gg\\LOLZ 4 Ekittens",
+    "join gg\\LOLZ for friends"
 }
 local chatDelay = 3.5
 local tpDelay = 3
@@ -164,7 +164,7 @@ end
 -- === QUEUE SCRIPT ===
 local function queueScript()
     local SRC = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/qaqa.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/xaxa.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
