@@ -352,11 +352,23 @@ task.spawn(function()
     end
 end)
 
--- Add the disconnection detection at the very end
-local function onPlayerRemoving(player)
-    if player == Players.LocalPlayer then
-        sendWebhook("@everyone: The account has been disconnected.", "Disconnection Notice", 16711680)
-    end
+local isHopping = false
+
+-- When teleporting (server hop)
+local function serverHop(reason)
+    isHopping = true
+    -- existing server hop code...
+    -- after teleport, reset flag after delay
+    task.delay(5, function()
+        isHopping = false
+    end)
 end
 
+-- Detect player removal (disconnect)
+local function onPlayerRemoving(player)
+    if player == Players.LocalPlayer and not isHopping then
+        -- Send plain text message pinging you
+        sendWebhook("@everyone The account has been disconnected.", "Disconnection Notice", 16711680)
+    end
+end
 Players.PlayerRemoving:Connect(onPlayerRemoving)
