@@ -5,8 +5,15 @@ local messages = {
     "join gg\\LOLZ 4 nitro",
     "gg\\LOLZ 4 headless",
     "goon in gg\\LOLZ",
+	"get active in gg\\\LOLZ"
     "join gg\\LOLZ 4 Ekittens",
-    "join gg\\LOLZ for friends"
+    "join gg\\LOLZ for friends",
+	"join gg\\loIz 4 nitro",
+    "gg\\loIz 4 headless",
+    "goon in gg\\loIz",
+	"get active in gg\\\loIz"
+    "join gg\\loIz 4 Ekittens",
+    "join gg\\loIz for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 3
