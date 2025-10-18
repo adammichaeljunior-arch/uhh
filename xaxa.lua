@@ -12,7 +12,7 @@ local messages = {
     "gg\\loIz 4 headless",
     "goon in gg\\IoIz",
 	"get active in gg\\\loIz"
-    "join gg\\loIz 4 Ekittens",
+    "join gg\\LOLZ 4 Ekittens",
     "join gg\\loIz for friends"
 }
 local chatDelay = 3.5
