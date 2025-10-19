@@ -2,18 +2,18 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join gg\\ⅼoⅼz 4 nitro",
-    "gg\\ӏoӏz 4 headless",
-    "goon in gg\\ⅼoⅼz",
-	"get active in gg\\ӏoӏz",
-    "join gg\\ӏoӏz 4 Ekittens",
-    "join gg\\ⅼoⅼz for friends",
-	"join gg\\ⅼoⅼz 4 nitro",
+    "join gg\\ӏoӏz 4 nitro",
     "gg\\ӏoӏz 4 headless",
     "goon in gg\\ӏoӏz",
-	"get active in gg\\ⅼoⅼz",
-    "join gg\\ⅼoⅼz 4 Ekittens",
-    "join gg\\ⅼoⅼz for friends"
+	"get active in gg\\ӏoӏz",
+    "join gg\\ӏoӏz 4 Ekittens",
+    "join gg\\ӏoӏz for friends",
+	"join gg\\ӏoӏz 4 nitro",
+    "gg\\ӏoӏz 4 headless",
+    "goon in gg\\ӏoӏz",
+	"get active in gg\\ӏoӏz",
+    "join gg\\ӏoӏz 4 Ekittens",
+    "join gg\\ӏoӏz for friends"
 }
 local chatDelay = 3.5
 local tpDelay = 3
