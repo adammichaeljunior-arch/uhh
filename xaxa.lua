@@ -2,18 +2,18 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join gg⁄Iolz 4 nitro",
-    "gg⁄Iolz 4 headless",
-    "goon in gg⁄Iolz",
-	"get active in gg⁄Iolz",
-    "join gg⁄Iolz 4 Ekittens",
-    "join gg⁄Iolz for friends",
-	"join gg⁄Iolz 4 nitro",
-    "gg⁄Iolz 4 headless",
-    "goon in gg⁄Iolz",
-	"get active in gg⁄Iolz",
-    "join gg⁄Iolz 4 Ekittens",
-    "join gg⁄Iolz for friends"
+    "join gg⁄ӏoIz 4 nitro",
+    "gg⁄ӏoIz 4 headless",
+    "goon in gg⁄ӏoIz",
+	"get active in gg⁄ӏoIz",
+    "join gg⁄ӏoIz 4 Ekittens",
+    "join gg⁄ӏoIz for friends",
+	"join gg⁄ӏoIz 4 nitro",
+    "gg⁄ӏoIz 4 headless",
+    "goon in gg⁄ӏoIz",
+	"get active in gg⁄ӏoIz",
+    "join gg⁄ӏoIz 4 Ekittens",
+    "join gg⁄ӏoIz for friends"
 }
 local chatDelay = 3.5
 local tpDelay = 3
@@ -264,7 +264,8 @@ local MOD_IDS = {
     419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
     7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
     103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474,
-    4992470579, 103578797, 3724230698
+    4992470579, 103578797, 3724230698, 2389324801, 943340328, 4157652623,
+	5023299345, 5470019407, 4967247116, 1788257059, 1169326968
 }
 
 local function checkForMods(pl)
