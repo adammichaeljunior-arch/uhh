@@ -2,11 +2,11 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /LOLZ 4 nitro",
-    "/LOLZ 4 headless",
-    "goon in /LOLZ",
-    "join /LOLZ 4 Ekittens",
-    "join /LOLZ for friends"
+    "join /lоIz 4 nitro",
+    "/lоIz 4 headless",
+    "goon in /lоIz",
+    "join /lоIz 4 Ekittens",
+    "join /lоIz for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 3
