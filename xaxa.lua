@@ -7,7 +7,9 @@ local messages = {
     "freaky talk in /slowly",
 	"be first in /slowly",
     "get active in /slowly",
-	"join /slowly for nitro"
+	"join /slowly for nitro",
+	"join /slowly for egirls",
+	"/slowly for pawjobs"
 }
 local chatDelay = 3.5
 local tpDelay = 3
