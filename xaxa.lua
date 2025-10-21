@@ -11,10 +11,10 @@ local messages = {
 	"join /slowly for egirls",
 	"/slowly for pawjobs"
 }
-local chatDelay = 3.5
+
+local chatDelay = 2.5
 local tpDelay = 3
 local overlayDelay = 3 -- seconds before showing overlay
-
 
 -- === TOGGLES ===
 _G.AutoSay = true
@@ -29,34 +29,40 @@ local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local channel = nil
 pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
 
-
-
--- === FPS CAP ===
+-- FPS Cap
 if setfpscap then
     setfpscap(6) -- Change this to your desired FPS
 else
     warn("Executor does not support setfpscap!")
 end
 
--- === WEBHOOK SENDER (WITH EMBEDS & TIMESTAMPS) ===
-local function sendWebhook(content, title, color)
+-- Support function for webhook
+local function sendWebhook(content, isPlainText)
     if not content then return false end
-    color = color or 16711680 -- default red
-    title = title or "Notification"
     
-    local payload = {
-        embeds = {{
-            title = title,
-            description = content,
-            color = color,
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") -- UTC ISO format
-        }}
-    }
+    local payload
+    if isPlainText then
+        -- Plain text message
+        payload = {
+            content = content
+        }
+    else
+        -- Embed message
+        payload = {
+            embeds = {{
+                title = "Notification",
+                description = content,
+                color = 16711680,
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        }
+    end
 
     local requestBody = {
         Url = WEBHOOK_URL,
@@ -64,14 +70,13 @@ local function sendWebhook(content, title, color)
         Headers = { ["Content-Type"] = "application/json" },
         Body = HttpService:JSONEncode(payload),
     }
-
     if syn and syn.request then return syn.request(requestBody) end
     if http_request then return http_request(requestBody) end
     if http and http.request then return http.request(requestBody) end
     if request then return request(requestBody) end
 end
 
--- === CHAT HELPER ===
+-- Chat helper
 local lastMessageTime = 0
 local function sendChat(msg)
     if not channel then return end
@@ -81,7 +86,7 @@ local function sendChat(msg)
     if ok then lastMessageTime = os.time() end
 end
 
--- === UI CREATION ===
+-- UI Overlay
 local overlay = Instance.new("ScreenGui")
 overlay.Name = "FancyOverlay"
 overlay.IgnoreGuiInset = true
@@ -95,7 +100,6 @@ background.BorderSizePixel = 0
 background.Visible = false
 background.Parent = overlay
 
--- main panel
 local panel = Instance.new("Frame")
 panel.Size = UDim2.new(0.5, 0, 0.5, 0)
 panel.Position = UDim2.new(0.25, 0, 0.25, 0)
@@ -107,7 +111,6 @@ local uiCorner = Instance.new("UICorner")
 uiCorner.CornerRadius = UDim.new(0, 12)
 uiCorner.Parent = panel
 
--- title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
@@ -117,7 +120,6 @@ title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(200,200,200)
 title.Parent = panel
 
--- info section
 local info = Instance.new("TextLabel")
 info.Size = UDim2.new(1, -20, 0.8, -20)
 info.Position = UDim2.new(0, 10, 0.18, 0)
@@ -131,12 +133,11 @@ info.TextYAlignment = Enum.TextYAlignment.Top
 info.Text = "Loading..."
 info.Parent = panel
 
--- show overlay after delay
 task.delay(overlayDelay, function()
     background.Visible = true
 end)
 
--- === CPU SAVER ===
+-- CPU Saver
 if _G.CPUSaver then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -157,7 +158,7 @@ if _G.CPUSaver then
     end)
 end
 
--- === QUEUE SCRIPT ===
+-- Queue Script
 local function queueScript()
     local SRC = [[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/xaxa.lua"))()
@@ -175,103 +176,98 @@ local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
 local lastServerId = nil
-local MIN_PLAYERS = 10 -- minimum number of players required
+local MIN_PLAYERS = 10 -- minimum players for server hop
 
+-- Server hopping logic
 local function getPublicServers(placeId)
-	local servers = {}
-	local cursor = ""
-
-	repeat
-		local success, result = pcall(function()
-			return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or ""))
-		end)
-
-		if success then
-			local data = HttpService:JSONDecode(result)
-			if data and data.data then
-				for _, server in ipairs(data.data) do
-					table.insert(servers, server)
-				end
-			end
-			cursor = data.nextPageCursor or ""
-		else
-			warn("[ServerHop] Failed to fetch server list.")
-			break
-		end
-
-		task.wait(0.5)
-	until cursor == "" or #servers >= 400 -- cap pages for safety
-
-	return servers
+    local servers = {}
+    local cursor = ""
+    repeat
+        local success, result = pcall(function()
+            return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or ""))
+        end)
+        if success then
+            local data = HttpService:JSONDecode(result)
+            if data and data.data then
+                for _, server in ipairs(data.data) do
+                    table.insert(servers, server)
+                end
+            end
+            cursor = data.nextPageCursor or ""
+        else
+            warn("[ServerHop] Failed to fetch server list.")
+            break
+        end
+        task.wait(0.5)
+    until cursor == "" or #servers >= 400
+    return servers
 end
 
 local function serverHop(reason)
-	info.Text = "⏭ Server hopping...\nReason: " .. (reason or "rotation")
+    isHopping = true
+    -- Send webhook about server hop
+    sendWebhook(
+        ("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
+        :format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
+        false
+    )
 
-	sendWebhook(
-		("User: %s (%s)\nReason: %s\nPlayers: %d\nJobId: %s")
-		:format(player.Name, player.DisplayName, reason or "rotation", #Players:GetPlayers(), game.JobId),
-		"🌐 Server Hop",
-		3447003
-	)
+    -- Queue script for next server
+    queueScript()
 
-	queueScript()
+    local servers = getPublicServers(game.PlaceId)
+    if not servers or #servers == 0 then
+        warn("[ServerHop] No servers found.")
+        TeleportService:Teleport(game.PlaceId, player)
+        isHopping = false
+        return
+    end
 
-	local servers = getPublicServers(game.PlaceId)
-	if not servers or #servers == 0 then
-		warn("[ServerHop] No servers found.")
-		TeleportService:Teleport(game.PlaceId, player)
-		return
-	end
+    local validServers = {}
+    for _, server in ipairs(servers) do
+        if server.playing < server.maxPlayers
+            and server.id ~= game.JobId
+            and server.id ~= lastServerId
+            and server.playing >= MIN_PLAYERS then
+            table.insert(validServers, server)
+        end
+    end
 
-	-- filter
-	local validServers = {}
-	for _, server in ipairs(servers) do
-		if server.playing < server.maxPlayers
-			and server.id ~= game.JobId
-			and server.id ~= lastServerId
-			and server.playing >= MIN_PLAYERS then
-			table.insert(validServers, server)
-		end
-	end
+    if #validServers == 0 then
+        warn("[ServerHop] No valid servers found, teleporting randomly.")
+        TeleportService:Teleport(game.PlaceId, player)
+        isHopping = false
+        return
+    end
 
-	if #validServers == 0 then
-		warn("[ServerHop] No valid servers found, teleporting randomly.")
-		TeleportService:Teleport(game.PlaceId, player)
-		return
-	end
+    table.sort(validServers, function(a, b)
+        return a.playing > b.playing
+    end)
 
-	-- sort by activity (more players = higher priority)
-	table.sort(validServers, function(a, b)
-		return a.playing > b.playing
-	end)
+    local topCount = math.min(5, #validServers)
+    local target = validServers[math.random(1, topCount)]
+    lastServerId = target.id
 
-	-- pick from top few (adds randomness to avoid always same)
-	local topCount = math.min(5, #validServers)
-	local target = validServers[math.random(1, topCount)]
-	lastServerId = target.id
-
-	print(string.format("[ServerHop] Targeting active server %s (%d/%d)", target.id, target.playing, target.maxPlayers))
-	TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
+    print(string.format("[ServerHop] Targeting server %s (%d/%d)", target.id, target.playing, target.maxPlayers))
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
+    -- Reset hopping flag after teleport
+    task.delay(5, function()
+        isHopping = false
+    end)
 end
 
--- === MOD DETECTION ===
+-- Mod detection
 local MOD_IDS = {
     419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
     7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
     103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474,
-    4992470579, 103578797, 3724230698, 2389324801, 943340328, 4157652623,
-	5023299345, 5470019407, 4967247116, 1788257059, 1169326968
+    4992470579, 103578797, 3724230698, 2508135204
 }
 
 local function checkForMods(pl)
     for _, id in ipairs(MOD_IDS) do
         if pl.UserId == id then
-            sendWebhook(
-                "🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")",
-                "⚠️ Mod Alert",
-                16711680 -- red
-            )
+            sendWebhook("🚨 Mod detected: " .. pl.Name .. " ("..pl.UserId..")", false)
             serverHop("Mod detected: " .. pl.Name)
             break
         end
@@ -281,7 +277,7 @@ end
 for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
 Players.PlayerAdded:Connect(checkForMods)
 
--- === AUTO CHAT LOOP ===
+-- Auto chat loop
 task.spawn(function()
     task.wait(3)
     local i = 1
@@ -292,7 +288,7 @@ task.spawn(function()
     end
 end)
 
--- === AUTO TELEPORT LOOP ===
+-- Auto teleport loop
 task.spawn(function()
     while _G.AutoTP do
         local allPlayers = {}
@@ -304,7 +300,7 @@ task.spawn(function()
 
         if #allPlayers < 1 then
             info.Text = "⚠️ No players found. Hopping..."
-            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960) -- yellow
+            sendWebhook("No players found. Rotating server...", "⚠️ Auto Rotation", 16776960)
             serverHop("Empty server")
             return
         end
@@ -340,39 +336,42 @@ task.spawn(function()
         end
 
         info.Text = "🔄 Finished all players. Hopping..."
-        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280) -- green
+        sendWebhook("Finished all players. Rotating server...", "🔄 Auto Rotation", 65280)
         serverHop("Rotation after reaching players")
         task.wait(1)
     end
 end)
 
--- Add the auto mod check loop here
-task.spawn(function()
-    while true do
-        for _, pl in ipairs(Players:GetPlayers()) do
-            checkForMods(pl)
-        end
-        task.wait(1) -- check every 5 seconds
-    end
-end)
-
+-- Disconnection detection with mention
 local isHopping = false
 
--- When teleporting (server hop)
-local function serverHop(reason)
-    isHopping = true
-    -- existing server hop code...
-    -- after teleport, reset flag after delay
-    task.delay(5, function()
-        isHopping = false
-    end)
-end
-
--- Detect player removal (disconnect)
-local function onPlayerRemoving(player)
-    if player == Players.LocalPlayer and not isHopping then
-        -- Send plain text message pinging you
-        sendWebhook("@everyone The account has been disconnected.", "Disconnection Notice", 16711680)
+local function onPlayerRemoving(pl)
+    if pl == Players.LocalPlayer and not isHopping then
+        -- Send plain text @everyone message
+        sendWebhook("@everyone The account has been disconnected.", true)
     end
 end
+
 Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+-- Idle detection
+local idleTime = 0
+local idleThreshold = 300 -- seconds, e.g., 5 minutes
+
+local function resetIdleTimer()
+    idleTime = 0
+end
+
+UserInputService.InputBegan:Connect(resetIdleTimer)
+UserInputService.InputChanged:Connect(resetIdleTimer)
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        idleTime = idleTime + 1
+        if idleTime >= idleThreshold then
+            sendWebhook("@everyone Player has been idle for 5 minutes.", false)
+            idleTime = 0 -- reset or stop if desired
+        end
+    end
+end)
