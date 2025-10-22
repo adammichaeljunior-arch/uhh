@@ -268,7 +268,7 @@ local MOD_IDS = {
     4992470579, 103578797, 3724230698, 2508135204, 738202, 9526977984,
     282622, 1071389380
 }
-}
+
 
 local function checkForMods(pl)
     for _, id in ipairs(MOD_IDS) do
