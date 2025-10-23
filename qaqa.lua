@@ -2,11 +2,11 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /lоIz 4 nitro",
-    "/lоIz 4 headless",
-    "goon in /lоIz",
-    "join /lоIz 4 Ekittens",
-    "join /lоIz for friends"
+    "join /slowly 4 nitro",
+    "/slowly 4 headless",
+    "goon in /slowly",
+    "join /slowly 4 Ekittens",
+    "join /slowly for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 3
@@ -257,8 +257,7 @@ local MOD_IDS = {
     419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
     7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
     103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474,
-    4992470579, 103578797, 3724230698, 2508135204, 738202, 9526977984,
-    282622, 1071389380
+    4992470579, 103578797, 3724230698, 2508135204
 }
 
 local function checkForMods(pl)
