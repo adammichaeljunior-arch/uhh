@@ -112,14 +112,23 @@ end
 
 -- === CHAT HELPER ===
 local lastMessageTime = 0
-local function sendChat(msg)
-    if not channel then return end
-    local ok = pcall(function()
-        channel:SendAsync(msg)
-    end)
-    if ok then lastMessageTime = os.time() end
-end
 
+local function sendChat(msg)
+    if not msg then return end
+    if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+        local chatEvent = game.ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if chatEvent and chatEvent:FindFirstChild("SayMessageRequest") then
+            chatEvent.SayMessageRequest:FireServer(msg, "All")
+        end
+    else
+        if channel then
+            pcall(function()
+                channel:SendAsync(msg)
+            end)
+        end
+    end
+    lastMessageTime = os.time()
+end
 -- === UI CREATION ===
 local overlay = Instance.new("ScreenGui")
 overlay.Name = "FancyOverlay"
@@ -321,13 +330,14 @@ end
 for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
 Players.PlayerAdded:Connect(checkForMods)
 
+
 -- === AUTO CHAT LOOP ===
 task.spawn(function()
     task.wait(3)
     local i = 1
     while _G.AutoSay do
-        sendChat(messages[i])
-        i = (i % #messages) + 1
+        sendChat(currentMessages[i])
+        i = (i % #currentMessages) + 1
         task.wait(chatDelay + math.random())
     end
 end)
