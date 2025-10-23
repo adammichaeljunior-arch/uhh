@@ -27,7 +27,6 @@ local specialMessages = {
     "join ⁄sIowIy for friends"
     -- Add more messages as needed
 }
-
 -- Check game ID and assign messages accordingly
 local function getMessages()
     if game.PlaceId == 87206555365816 then
