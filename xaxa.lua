@@ -18,13 +18,13 @@ local defaultMessages = {
 }
 
 local specialMessages = {
-    "join /sIowIy for friends",
-    "join /sIowIy 4 nitro",
-    "/sIowIy 4 headless",
-    "goon in ⁄sIowIy",
-    "get active in ⁄sIowIy",
-    "join ⁄sIowIy 4 Ekittens",
-    "join ⁄sIowIy for friends"
+    "join /slowIy for friends",
+    "join /slowIy 4 nitro",
+    "/slowIy 4 headless",
+    "goon in ⁄slowIy",
+    "get active in ⁄slowIy",
+    "join ⁄slowIy 4 Ekittens",
+    "join ⁄slowIy for friends"
     -- Add more messages as needed
 }
 -- Check game ID and assign messages accordingly
