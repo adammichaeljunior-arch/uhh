@@ -18,9 +18,9 @@ local defaultMessages = {
 }
 
 local specialMessages = {
-    "join ⁄sIowIy for friends",
-    "join ⁄sIowIy 4 nitro",
-    "⁄sIowIy 4 headless",
+    "join /sIowIy for friends",
+    "join /sIowIy 4 nitro",
+    "/sIowIy 4 headless",
     "goon in ⁄sIowIy",
     "get active in ⁄sIowIy",
     "join ⁄sIowIy 4 Ekittens",
