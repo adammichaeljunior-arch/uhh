@@ -4,32 +4,32 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25i
 -- Define the messages for default and special game
 local defaultMessages = {
     "join /slowly 4 nitro",
-    "⁄slowly 4 headless",
-    "goon in ⁄slowly",
-    "get active in ⁄slowly",
-    "join ⁄slowly 4 Ekittens",
-    "join ⁄slowly for friends",
-    "join ⁄slowly 4 nitro",
-    "⁄slowly 4 headless",
-    "goon in ⁄slowly",
+    "/slowly 4 headless",
+    "goon in /slowwly",
+    "get active in /slowly",
+    "join /slowly 4 Ekittens",
+    "join /slowly for friends",
+    "join /slowly 4 nitro",
+    "/slowly 4 headless",
+    "goon in /slowly",
     "get active in ⁄slowly",
     "join ⁄slowly 4 Ekittens",
     "join ⁄slowly for friends"
 }
 
 local specialMessages = {
-    "join /sIowly for friends",
-    "join /sIowly 4 nitro",
-    "/sIowly 4 headless",
-    "goon in /sIowly",
-    "get active in /sIowly",
-    "join /sIowly 4 Ekittens",
-    "join /sIowly for friends"
+    "join /SLОWLY for friends",
+    "join /SLОWLY 4 nitro",
+    "/SLОWLY 4 headless",
+    "goon in /SLОWLY",
+    "get active in /SLОWLY",
+    "join /SLОWLY 4 Ekittens",
+    "join /SLОWLY for friends"
     -- Add more messages as needed
 }
 -- Check game ID and assign messages accordingly
 local function getMessages()
-    if game.PlaceId == 87206555365816 then
+    if game.PlaceId == 82018751001830 then
         return specialMessages
     else
         return defaultMessages
