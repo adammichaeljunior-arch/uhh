@@ -2,14 +2,14 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /drowsy 4 nitro",
-    "/drowsy 4 headless",
-    "goon in /drowsy",
-    "join /drowsy 4 Ekittens",
-    "join /drowsy for friends"
+    "join /drοwsy 4 nitro",
+    "/drοwsy 4 headless",
+    "goon in /drοwsy",
+    "join /drοwsy 4 Ekittens",
+    "join /drοwsy for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 3
+local tpDelay = 2.5
 local overlayDelay = 3 -- seconds before showing overlay
 
 -- === TOGGLES ===
