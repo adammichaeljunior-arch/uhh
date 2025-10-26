@@ -2,11 +2,11 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /DRОWSY 4 nitro",
-    "/DRОWSY 4 headless",
-    "goon in /DRОWSY",
-    "join /DRОWSY 4 Ekittens",
-    "join /DRОWSY for friends"
+    "join /slowly for nitro",
+    "/slowly for headless",
+    "goon in /slowly ",
+    "join /slowly for Ekittens",
+    "join /slowly for friends"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
