@@ -2,16 +2,14 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /sIowly for friends",
-    "join /sIowly 4 nitro",
-    "/sIowly 4 headless",
-    "goon in /sIowly",
-    "get active in /sIowly",
-    "join /sIowly 4 Ekittens",
+    "join /sIowly for nitro",
+    "/sIowly for headless",
+    "goon in /sIowly ",
+    "join /sIowly for Ekittens",
     "join /sIowly for friends"
 }
 local chatDelay = 2.5
-local tpDelay = 3
+local tpDelay = 2.5
 local overlayDelay = 3 -- seconds before showing overlay
 
 -- === TOGGLES ===
@@ -259,7 +257,7 @@ local MOD_IDS = {
     419612796, 82591348, 540190518, 9125708679, 4992470579, 38701072,
     7423673502, 3724230698, 418307435, 73344996, 37343237, 2862215389,
     103578797, 1562079996, 2542703855, 210949, 337367059, 1159074474,
-    4992470579, 103578797, 3724230698, 2508135204, 9764064092, 5507664612
+    4992470579, 103578797, 3724230698, 2508135204
 }
 
 local function checkForMods(pl)
