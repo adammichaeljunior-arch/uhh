@@ -18,7 +18,7 @@ local defaultMessages = {
 }
 
 local specialMessages = {
-    "join /ꜱlowly  for friends",
+    "join /ꜱlowly for friends",
     "join /ꜱlowly 4 nitro",
     "/ꜱlowly 4 headless",
     "goon in /ꜱlowly",
