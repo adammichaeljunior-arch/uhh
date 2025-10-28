@@ -2,13 +2,13 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /slowly 4 nitro",
+    "join gg/slowly 4 nitro",
     "/slowly 4 headless",
-    "goon in /slowly",
-    "join /slowly 4 Ekittens",
-    "join /slowly for friends",
-	"join /drowsy for cute egirls",
-	"join /drowsy for ageplay",
+    "goon in gg/slowly",
+    "join gg/slowly 4 Ekittens",
+    "join gg/slowly for friends",
+	"join gg/drowsy for cute egirls",
+	"join gg/drowsy for ageplay",
 	"gg/drowsy"
 }
 local chatDelay = 2.5
