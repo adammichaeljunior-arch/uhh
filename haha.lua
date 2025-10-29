@@ -8,7 +8,7 @@ local messages = {
     "join gg/drowsy 4 Ekittens",
     "join gg/drowsy for friends",
 	"join gg/drowsy for cute egirls",
-	"join gg/drowsy for ageplay",
+	"join gg/drowsy for cute eboys",
 	"gg/drowsy"
 }
 local chatDelay = 2.5
