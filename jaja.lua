@@ -1,47 +1,210 @@
-local function isCharacterReady()
-    local char = player.Character
-    if not char then return false end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    return humanoid ~= nil and hrp ~= nil
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TextChatService = game:GetService("TextChatService")
+local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local channel = nil
+pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 5) end)
+
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
+
+-- Helper functions
+local function sendWebhook(content, isPlainText)
+    if not content then return false end
+    local payload
+    if isPlainText then
+        payload = { content = content }
+    else
+        payload = {
+            embeds = {{
+                title = "Notification",
+                description = content,
+                color = 16711680,
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        }
+    end
+    local requestBody = {
+        Url = WEBHOOK_URL,
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json" },
+        Body = HttpService:JSONEncode(payload),
+    }
+    if syn and syn.request then return syn.request(requestBody) end
+    if http_request then return http_request(requestBody) end
+    if http and http.request then return http.request(requestBody) end
+    if request then return request(requestBody) end
 end
 
-local function followAndReach(targetPosition, timeout)
-    -- Move towards position, follow if moving
+local function sendChat(msg)
+    if not channel then return end
+    pcall(function()
+        channel:SendAsync(msg)
+    end)
+end
+
+-- Overlay (skipped for brevity)
+
+-- Toggles
+_G.AutoSay = true
+_G.AutoTP = true
+_G.AutoEmote = true
+_G.CPUSaver = true
+
+-- CPU Saver
+if _G.CPUSaver then
+    pcall(function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        RunService:Set3dRenderingEnabled(false)
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.FogEnd = 9e9
+        Lighting.Ambient = Color3.new(0,0,0)
+        Lighting.OutdoorAmbient = Color3.new(0,0,0)
+    end)
+    task.spawn(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end
+        workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end)
+    end)
+end
+
+-- Queue script for teleport
+local function queueScript()
+    local SRC = [[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
+    ]]
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(SRC)
+    elseif queue_on_teleport then
+        queue_on_teleport(SRC)
+    end
+end
+
+-- Server hopping
+local lastServerId = nil
+local function serverHop(reason)
+    sendWebhook("Hopping server: " .. reason, false)
+    queueScript()
+    -- Fetch servers and pick one
+    local function getServers()
+        local servers = {}
+        local cursor = ""
+        repeat
+            local success, result = pcall(function()
+                return game:HttpGet("https://games.roblox.com/v1/games/"..game.GameId.."/servers/Public?sortOrder=Asc&limit=100" .. (cursor ~= "" and "&cursor="..cursor or ""))
+            end)
+            if success and result then
+                local data = HttpService:JSONDecode(result)
+                if data and data.data then
+                    for _, server in ipairs(data.data) do
+                        table.insert(servers, server)
+                    end
+                end
+                cursor = data.nextPageCursor or ""
+            else
+                break
+            end
+            task.wait(0.5)
+        until cursor == "" or #servers >= 400
+        return servers
+    end
+
+    local servers = getServers()
+    if not servers or #servers == 0 then
+        -- fallback
+        TeleportService:Teleport(game.PlaceId)
+        return
+    end
+
+    -- Filter servers
+    local validServers = {}
+    for _, server in ipairs(servers) do
+        if server.playing < server.maxPlayers and server.id ~= game.JobId and server.id ~= lastServerId and server.playing >= 10 then
+            table.insert(validServers, server)
+        end
+    end
+
+    if #validServers == 0 then
+        TeleportService:Teleport(game.PlaceId)
+        return
+    end
+
+    table.sort(validServers, function(a,b) return a.playing > b.playing end)
+    local target = validServers[math.random(1, math.min(5, #validServers))]
+    lastServerId = target.id
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id)
+end
+
+-- Check for mods (skipped for brevity)
+
+-- Utility functions for walking, following, asking
+local function isCharacterReady()
+    local c = player.Character
+    if not c then return false end
+    local hrp = c:FindFirstChild("HumanoidRootPart")
+    local hum = c:FindFirstChildOfClass("Humanoid")
+    return hrp ~= nil and hum ~= nil
+end
+
+local function teleportTo(pos)
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
+    end
+end
+
+local function followAndReach(targetPos, timeout)
     local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
     local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not hrp then return false end
-    
     local startTime = os.clock()
-    humanoid.WalkSpeed = 40 -- faster speed
-    
-    while (hrp.Position - targetPosition).Magnitude > 3 do
-        -- Move towards target
-        humanoid:MoveTo(targetPosition)
+    humanoid.WalkSpeed = 40
+    repeat
+        humanoid:MoveTo(targetPos)
         task.wait(0.5)
-        -- Check timeout
-        if os.clock() - startTime > timeout then
-            humanoid.WalkSpeed = 16 -- reset speed
-            return false -- timeout reached
+        if (hrp.Position - targetPos).Magnitude < 3 then
+            humanoid.WalkSpeed = 16
+            return true
         end
-        -- Update target position if moving
-        -- optional: add logic to follow moving target
-    end
-
-    humanoid.WalkSpeed = 16 -- reset to default
-    return true
+        if os.clock() - startTime > timeout then
+            humanoid.WalkSpeed = 16
+            return false
+        end
+    until false
 end
 
-local function teleportTo(position)
-    -- Teleport your character
-    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-    if hrp and humanoid then
-        hrp.CFrame = CFrame.new(position + Vector3.new(0, 3, 0))
-    end
-end
+local function visitPlayer(pl)
+    local targetPos = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and pl.Character.HumanoidRootPart.Position
+    if not targetPos then return end
+    local reached = false
+    local success = false
+    local startTime = os.clock()
 
-local function askPlayer(player)
+    -- Try to follow
+    repeat
+        if isCharacterReady() then
+            success = followAndReach(targetPos, 20)
+        end
+        if success then break end
+        -- Timeout, teleport
+        if os.clock() - startTime > 20 then
+            teleportTo(targetPos)
+            success = true
+            break
+        end
+        task.wait(0.5)
+    until false
+
+    -- Ask the player
     local questions = {
         "Wanna join a server with Nitro, Robux, and E-girls?",
         "Interested in a server with free Nitro and Robux?",
@@ -52,94 +215,60 @@ local function askPlayer(player)
     local question = questions[math.random(1, #questions)]
     sendChat(question)
 
+    -- Wait for response
     local responseMsg = nil
     local responseReceived = false
-
     local connections = {}
     for _, pl in ipairs(Players:GetPlayers()) do
         table.insert(connections, pl.Chatted:Connect(function(msg)
-            if pl == player then
-                responseMsg = msg
-                responseReceived = true
-            end
+            if pl == player then return end
+            responseMsg = msg
+            responseReceived = true
         end))
     end
-
     local timeout = 20
     local elapsed = 0
-    while not responseReceived and elapsed < timeout do
+    repeat
         task.wait(1)
         elapsed = elapsed + 1
-    end
+    until responseReceived or elapsed >= timeout
+    for _, conn in ipairs(connections) do conn:Disconnect() end
 
-    for _, conn in ipairs(connections) do
-        conn:Disconnect()
+    -- Respond
+    local function isResponseYes(msg)
+        local yesResponses = {"yes", "yea", "yeah", "sure", "ok", "okay", "ya"}
+        for _, r in ipairs(yesResponses) do
+            if string.find(string.lower(msg), r) then return true end
+        end
+        return false
+    end
+    local function isResponseNo(msg)
+        local noResponses = {"no", "nah", "nope"}
+        for _, r in ipairs(noResponses) do
+            if string.find(string.lower(msg), r) then return true end
+        end
+        return false
     end
 
     if responseMsg then
         if isResponseYes(responseMsg) then
             sendChat("join gg/slowly")
         else
-            sendChat("Alright, maybe later!")
+            sendChat("Alright, maybe next time!")
         end
     else
         sendChat("No response, moving on.")
     end
 end
 
-local function visitPlayer(pl)
-    local targetPos = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and pl.Character.HumanoidRootPart.Position
-    if not targetPos then return end
-
-    local reached = false
-    local success = false
-    local startTime = os.clock()
-
-    -- Try to follow and reach
-    repeat
-        if isCharacterReady() then
-            success = followAndReach(targetPos, 20)
-        end
-        if success then break end
-
-        -- if not reached within time, teleport
-        if os.clock() - startTime > 20 then
-            teleportTo(targetPos)
-            success = true
-            break
-        end
-        task.wait(0.5)
-    until false
-
-    -- Once reached, ask the player
-    askPlayer(pl)
-end
-
-local function serverHop(reason)
-    sendWebhook("Hopping server: " .. reason, false)
-    -- Queue reinjection
-    local SRC = [[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/jaja.lua"))()
-    ]]
-    if syn and syn.queue_on_teleport then
-        syn.queue_on_teleport(SRC)
-    elseif queue_on_teleport then
-        queue_on_teleport(SRC)
-    end
-    -- Teleport to another server
-    game:GetService("TeleportService"):Teleport(game.PlaceId)
-end
-
--- Main process
+-- Main loop: visit each player, then server hop
 task.spawn(function()
-    local visitedCount = 0
-    local totalPlayers = #Players:GetPlayers()
-    for _, pl in ipairs(Players:GetPlayers()) do
+    local allPlayers = Players:GetPlayers()
+    for _, pl in ipairs(allPlayers) do
         if pl ~= Players.LocalPlayer and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
             visitPlayer(pl)
-            visitedCount = visitedCount + 1
         end
     end
-    -- After visiting all, hop server
+    -- After all, hop server
     serverHop("Finished visiting all players")
 end)
