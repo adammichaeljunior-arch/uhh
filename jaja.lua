@@ -1,4 +1,4 @@
--- Services
+-- ================== SERVICES ==================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
@@ -13,7 +13,7 @@ pcall(function() channel = TextChatService.TextChannels:WaitForChild("RBXGeneral
 
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
--- Helper functions
+-- ================== HELPERS ==================
 local function sendWebhook(content, isPlainText)
     if not content then return false end
     local payload
@@ -48,15 +48,7 @@ local function sendChat(msg)
     end)
 end
 
--- Overlay (skipped for brevity)
-
--- Toggles
-_G.AutoSay = true
-_G.AutoTP = true
-_G.AutoEmote = true
-_G.CPUSaver = true
-
--- CPU Saver
+-- ================== CPU Saver ==================
 if _G.CPUSaver then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -77,7 +69,7 @@ if _G.CPUSaver then
     end)
 end
 
--- Queue script for teleport
+-- ================== Queue on teleport ==================
 local function queueScript()
     local SRC = [[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/main/haha.lua"))()
@@ -89,12 +81,12 @@ local function queueScript()
     end
 end
 
--- Server hopping
+-- ================== Server Hop ==================
 local lastServerId = nil
 local function serverHop(reason)
     sendWebhook("Hopping server: " .. reason, false)
     queueScript()
-    -- Fetch servers and pick one
+    -- Fetch servers
     local function getServers()
         local servers = {}
         local cursor = ""
@@ -144,9 +136,7 @@ local function serverHop(reason)
     TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id)
 end
 
--- Check for mods (skipped for brevity)
-
--- Utility functions for walking, following, asking
+-- ================== Character & Movement ==================
 local function isCharacterReady()
     local c = player.Character
     if not c then return false end
@@ -159,6 +149,8 @@ local function teleportTo(pos)
     local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if hrp then
         hrp.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
+        -- Small wait to ensure position update
+        task.wait(0.2)
     end
 end
 
@@ -166,8 +158,8 @@ local function followAndReach(targetPos, timeout)
     local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
     local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not hrp then return false end
-    local startTime = os.clock()
     humanoid.WalkSpeed = 40
+    local startTime = os.clock()
     repeat
         humanoid:MoveTo(targetPos)
         task.wait(0.5)
@@ -185,17 +177,17 @@ end
 local function visitPlayer(pl)
     local targetPos = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and pl.Character.HumanoidRootPart.Position
     if not targetPos then return end
-    local reached = false
+
     local success = false
     local startTime = os.clock()
 
-    -- Try to follow
+    -- Follow/Reach with timeout of 20s
     repeat
         if isCharacterReady() then
             success = followAndReach(targetPos, 20)
         end
         if success then break end
-        -- Timeout, teleport
+        -- If not reached in 20s, teleport
         if os.clock() - startTime > 20 then
             teleportTo(targetPos)
             success = true
@@ -204,7 +196,10 @@ local function visitPlayer(pl)
         task.wait(0.5)
     until false
 
-    -- Ask the player
+    -- Small wait after reaching
+    task.wait(2)
+
+    -- Ask question
     local questions = {
         "Wanna join a server with Nitro, Robux, and E-girls?",
         "Interested in a server with free Nitro and Robux?",
@@ -215,7 +210,7 @@ local function visitPlayer(pl)
     local question = questions[math.random(1, #questions)]
     sendChat(question)
 
-    -- Wait for response
+    -- Wait 15s for response
     local responseMsg = nil
     local responseReceived = false
     local connections = {}
@@ -226,15 +221,18 @@ local function visitPlayer(pl)
             responseReceived = true
         end))
     end
-    local timeout = 20
+    local responseTimeout = 15
     local elapsed = 0
     repeat
         task.wait(1)
         elapsed = elapsed + 1
-    until responseReceived or elapsed >= timeout
+    until responseReceived or elapsed >= responseTimeout
     for _, conn in ipairs(connections) do conn:Disconnect() end
 
-    -- Respond
+    -- Small delay after response
+    task.wait(3)
+
+    -- Respond based on answer
     local function isResponseYes(msg)
         local yesResponses = {"yes", "yea", "yeah", "sure", "ok", "okay", "ya"}
         for _, r in ipairs(yesResponses) do
@@ -259,9 +257,13 @@ local function visitPlayer(pl)
     else
         sendChat("No response, moving on.")
     end
+
+    -- Delay before next interaction
+    task.wait(5)
 end
 
--- Main loop: visit each player, then server hop
+-- ================== Main Logic ==================
+
 task.spawn(function()
     local allPlayers = Players:GetPlayers()
     for _, pl in ipairs(allPlayers) do
@@ -269,6 +271,6 @@ task.spawn(function()
             visitPlayer(pl)
         end
     end
-    -- After all, hop server
+    -- After visiting all players, hop server
     serverHop("Finished visiting all players")
 end)
