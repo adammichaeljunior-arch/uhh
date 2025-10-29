@@ -208,11 +208,11 @@ local function visitPlayer(pl)
 
     -- Ask question
     local questions = {
-        "Wanna join a server with Nitro, Robux, and E-girls?",
-        "Interested in a server with free Nitro and Robux?",
-        "Join a server with E-girls and free Robux?",
-        "Wanna join for Nitro, Robux, and cute egirls?",
-        "Up for a server with free Robux and Nitro?"
+        "we got hella egirls in gg/slowly",
+        "join gg/slowly!",
+        "come goon in gg/slowly",
+        "we giving out rbx in gg/slowly",
+        "someone was talking about u in gg/slowly LOL"
     }
     local question = questions[math.random(1, #questions)]
     sendChat(question)
