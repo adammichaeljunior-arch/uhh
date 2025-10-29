@@ -5,7 +5,6 @@ local TextChatService = game:GetService("TextChatService")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local channel = nil
@@ -15,7 +14,7 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25i
 
 -- ================== HELPERS ==================
 local function sendWebhook(content, isPlainText)
-    if not content then return false end
+    if not content then return end
     local payload
     if isPlainText then
         payload = { content = content }
@@ -136,6 +135,15 @@ local function serverHop(reason)
     TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id)
 end
 
+-- ================== Get Front Position of Player ==================
+local function getFrontPosition(pl)
+    local hrp = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    local lookVector = hrp.CFrame.LookVector
+    local frontPos = hrp.CFrame.Position + lookVector * 3 -- 3 studs in front
+    return frontPos
+end
+
 -- ================== Character & Movement ==================
 local function isCharacterReady()
     local c = player.Character
@@ -149,7 +157,6 @@ local function teleportTo(pos)
     local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if hrp then
         hrp.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
-        -- Small wait to ensure position update
         task.wait(0.2)
     end
 end
@@ -175,7 +182,7 @@ local function followAndReach(targetPos, timeout)
 end
 
 local function visitPlayer(pl)
-    local targetPos = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") and pl.Character.HumanoidRootPart.Position
+    local targetPos = getFrontPosition(pl)
     if not targetPos then return end
 
     local success = false
@@ -232,38 +239,12 @@ local function visitPlayer(pl)
     -- Small delay after response
     task.wait(3)
 
-    -- Respond based on answer
-    local function isResponseYes(msg)
-        local yesResponses = {"yes", "yea", "yeah", "sure", "ok", "okay", "ya"}
-        for _, r in ipairs(yesResponses) do
-            if string.find(string.lower(msg), r) then return true end
-        end
-        return false
-    end
-    local function isResponseNo(msg)
-        local noResponses = {"no", "nah", "nope"}
-        for _, r in ipairs(noResponses) do
-            if string.find(string.lower(msg), r) then return true end
-        end
-        return false
-    end
-
-    if responseMsg then
-        if isResponseYes(responseMsg) then
-            sendChat("join gg/slowly")
-        else
-            sendChat("Alright, maybe next time!")
-        end
-    else
-        sendChat("No response, moving on.")
-    end
-
-    -- Delay before next interaction
+    -- Send "gg/slowly" regardless of answer
+    sendChat("join gg/slowly")
     task.wait(5)
 end
 
--- ================== Main Logic ==================
-
+-- ================== Main Loop ==================
 task.spawn(function()
     local allPlayers = Players:GetPlayers()
     for _, pl in ipairs(allPlayers) do
@@ -271,6 +252,6 @@ task.spawn(function()
             visitPlayer(pl)
         end
     end
-    -- After visiting all players, hop server
+    -- After all players are visited, hop server
     serverHop("Finished visiting all players")
 end)
