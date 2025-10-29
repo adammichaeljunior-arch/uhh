@@ -228,7 +228,7 @@ local function visitPlayer(pl)
             responseReceived = true
         end))
     end
-    local responseTimeout = 15
+    local responseTimeout = 20
     local elapsed = 0
     repeat
         task.wait(1)
