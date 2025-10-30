@@ -24,7 +24,8 @@ local specialMessages = {
     "goon in /DROWSҮ",
     "get active in /DROWSҮ",
     "join /DROWSҮ 4 Ekittens",
-    "join /DROWSҮ for friends"
+    "join /DROWSҮ for friends",
+	"join /DROWSҮ 4 eseqs stage"
     -- Add more messages as needed
 }
 -- Check game ID and assign messages accordingly
