@@ -2,12 +2,12 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join gg/drowsy 4 nitro",
+    "join /drowsy 4 nitro",
     "/drowsy 4 headless",
     "goon in gg/drowsy",
-    "join gg/drowsy 4 Ekittens",
+    "join /drowsy 4 Ekittens",
     "join gg/drowsy for friends",
-	"join gg/drowsy for cute egirls",
+	"join /drowsy for cute egirls",
 	"join gg/drowsy for cute eboys",
 	"gg/drowsy 4 fansigns",
 	"camgrls in gg/drowsy"
