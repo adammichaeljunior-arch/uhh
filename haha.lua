@@ -12,6 +12,7 @@ local messages = {
 	"gg/drowsy 4 fansigns",
 	"camgrls in gg/drowsy",
 	"Beef in /drowsy",
+	"FEMBOYS in /drowsy",
 	"hosting a cam STAGE RIGHT NOW in /drowsy",
 	"Shes on CAM LOL -> /drowsy"
 }
