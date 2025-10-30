@@ -12,7 +12,8 @@ local messages = {
 	"gg/drowsy 4 fansigns",
 	"camgrls in gg/drowsy",
 	"Beef in /drowsy",
-	"hosting a eseqs STAGE RIGHT NOW in /drowsy"
+	"hosting a eseqs STAGE RIGHT NOW in /drowsy",
+	"Shes on CAM LOL -> /drowsy"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
