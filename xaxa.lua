@@ -18,13 +18,13 @@ local defaultMessages = {
 }
 
 local specialMessages = {
-    "join /ԁrowsy for friends",
-    "join /ԁrowsy 4 nitro",
-    "/ԁrowsy 4 headless",
-    "goon in /ԁrowsy",
-    "get active in /ԁrowsy",
-    "join /ԁrowsy 4 Ekittens",
-    "join /ԁrowsy for friends"
+    "join /DROWSҮ for friends",
+    "join /DROWSҮ 4 nitro",
+    "/DROWSҮ 4 headless",
+    "goon in /DROWSҮ",
+    "get active in /DROWSҮ",
+    "join /DROWSҮ 4 Ekittens",
+    "join /DROWSҮ for friends"
     -- Add more messages as needed
 }
 -- Check game ID and assign messages accordingly
