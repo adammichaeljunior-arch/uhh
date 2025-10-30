@@ -6,11 +6,13 @@ local messages = {
     "/drowsy 4 headless",
     "goon in gg/drowsy",
     "join /drowsy 4 Ekittens",
-    "join gg/drowsy for friends",
+    "join /drowsy for friends",
 	"join /drowsy for cute egirls",
 	"join gg/drowsy for cute eboys",
 	"gg/drowsy 4 fansigns",
-	"camgrls in gg/drowsy"
+	"camgrls in gg/drowsy",
+	"Beef in /drowsy",
+	"hosting a eseqs STAGE RIGHT NOW in /drowsy"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
