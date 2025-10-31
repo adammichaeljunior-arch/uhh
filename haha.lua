@@ -379,3 +379,14 @@ task.spawn(function()
         end
     end
 end)
+
+-- Auto server hop every 8 minutes
+task.spawn(function()
+    while true do
+        task.wait(480) -- 8 minutes in seconds
+        if not isHopping then
+            sendWebhook("🔄 Automatic server hop after 8 minutes.", false)
+            serverHop("Auto hop every 8 minutes")
+        end
+    end
+end)
