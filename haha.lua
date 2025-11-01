@@ -2,19 +2,19 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "join /drowsy 4 nitro",
-    "/drowsy 4 headless",
-    "goon in gg/drowsy",
-    "join /drowsy 4 Ekittens",
-    "/drowsy for friends",
-	"/drowsy for cute egirls",
-	"join /drowsy for cute eboys",
-	"gg/drowsy 4 fansigns",
-	"camgrls in gg/drowsy",
-	"Beef in /drowsy",
-	"FEMBOYS in /drowsy",
-	"hosting a 31,000 robux giveaway in /drowsy",
-	"Shes on CAM LOL -> /drowsy"
+    "join /droԝsy 4 nitro",
+    "/droԝsy 4 headless",
+    "goon in gg/droԝsy",
+    "join /droԝsy 4 Ekittens",
+    "/droԝsy for friends",
+	"/droԝsy for cute egirls",
+	"join /droԝsy for cute eboys",
+	"gg/droԝsy 4 fansigns",
+	"camgrls in gg/droԝsy",
+	"Beef in /droԝsy",
+	"FEMBOYS in /droԝsy",
+	"hosting a 31,000 robux giveaway in /droԝsy",
+	"Shes on CAM LOL -> /droԝsy"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
