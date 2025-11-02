@@ -5,8 +5,10 @@ local messages = {
     "cheap headless accounts -> /cheapheadless",
     "60$ headless accounts -> /cheapheadless",
     "headless and korblox accounts in -> /cheapheadless",
-    "cheap rbx -> /cheapheadless",
-	"selling headless -> /cheapheadless"
+    "buy cheap rbx -> /cheapheadless",
+	"selling headless -> /cheapheadless",
+	"/cheapheadless for headless",
+	"/cheapheadless for rbx"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
