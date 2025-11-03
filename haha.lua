@@ -11,9 +11,9 @@ local messages = {
 	"join /droԝsy for cute eboys",
 	"gg/droԝsy 4 fansigns",
 	"camgrls in gg/droԝsy",
-	"Beef in /droԝsy",
+	" headless accs in -> /cheapheadless",
 	"FEMBOYS in /droԝsy",
-	"hosting a 31,000 robux giveaway in /droԝsy",
+	"cheap headless in -> /cheapheadless",
 	"Shes on CAM LOL -> /droԝsy"
 }
 local chatDelay = 2.5
