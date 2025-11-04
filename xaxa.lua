@@ -3,18 +3,18 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25i
 
 -- Define the messages for default and special game
 local defaultMessages = {
-    "join /slowly 4 nitro",
-    "/slowly 4 headless",
-    "goon in /slowwly",
-    "get active in /slowly",
-    "join /slowly 4 Ekittens",
-    "join /slowly for friends",
-    "join /slowly 4 nitro",
-    "/slowly 4 headless",
-    "goon in /slowly",
-    "get active in ⁄slowly",
-    "join ⁄slowly 4 Ekittens",
-    "join ⁄slowly for friends"
+    "join /drowsy 4 nitro",
+    "/drowsy 4 headless",
+    "goon in /drowsy",
+    "get active in /drowsy",
+    "join /drowsy 4 Ekittens",
+    "join /drowsy for friends",
+    "join /drowsy 4 nitro",
+    "/drowsy 4 headless",
+    "goon in /drowsy",
+    "get active in ⁄drowsy",
+    "join ⁄drowsy 4 Ekittens",
+    "join ⁄drowsy for friends"
 }
 
 local specialMessages = {
