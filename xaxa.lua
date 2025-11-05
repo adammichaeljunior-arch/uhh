@@ -460,30 +460,3 @@ if _G.CPUSaver then
     end)
 end
 
--- Reduce auto chat and teleport checks frequency
-task.spawn(function()
-    while true do
-        -- Disable chat spam if not critical
-        -- sendChat(currentMessages[i]) -- Commented out for extra savings
-        task.wait(9999) -- effectively disables auto chat loop
-    end
-end)
-
-task.spawn(function()
-    while true do
-        -- Disable auto teleport loop
-        -- Add a very long wait to prevent CPU usage
-        task.wait(9999)
-    end
-end)
-
--- Disable server hop and mod detection loops if needed
-task.spawn(function()
-    while true do
-        -- Comment out mod detection for maximum savings
-        -- for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
-        -- task.wait(1)
-        task.wait(9999)
-    end
-end)
-
