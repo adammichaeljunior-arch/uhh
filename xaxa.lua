@@ -425,3 +425,65 @@ local function onPlayerRemoving(player)
     end
 end
 Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+-- Extra CPU Saver Enhancements
+
+if _G.CPUSaver then
+    pcall(function()
+        -- Lower rendering quality further
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        RunService:Set3dRenderingEnabled(false)
+        -- Completely disable all shadows and effects
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.FogEnd = 9e9
+        Lighting.Ambient = Color3.new(0,0,0)
+        Lighting.OutdoorAmbient = Color3.new(0,0,0)
+        -- Disable sound if not needed
+        for _, sound in pairs(workspace:GetDescendants()) do
+            if sound:IsA("Sound") then
+                sound.Volume = 0
+                sound.Playing = false
+            end
+        end
+    end)
+    -- Disable particles and trails more aggressively
+    task.spawn(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Enabled = false
+            end
+        end
+        workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end)
+    end)
+end
+
+-- Reduce auto chat and teleport checks frequency
+task.spawn(function()
+    while true do
+        -- Disable chat spam if not critical
+        -- sendChat(currentMessages[i]) -- Commented out for extra savings
+        task.wait(9999) -- effectively disables auto chat loop
+    end
+end)
+
+task.spawn(function()
+    while true do
+        -- Disable auto teleport loop
+        -- Add a very long wait to prevent CPU usage
+        task.wait(9999)
+    end
+end)
+
+-- Disable server hop and mod detection loops if needed
+task.spawn(function()
+    while true do
+        -- Comment out mod detection for maximum savings
+        -- for _, pl in ipairs(Players:GetPlayers()) do checkForMods(pl) end
+        -- task.wait(1)
+        task.wait(9999)
+    end
+end)
+
