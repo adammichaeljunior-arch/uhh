@@ -390,3 +390,40 @@ task.spawn(function()
         end
     end
 end)
+
+
+-- Extra CPU Saver Enhancements
+
+if _G.CPUSaver then
+    pcall(function()
+        -- Lower rendering quality further
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        RunService:Set3dRenderingEnabled(false)
+        -- Completely disable all shadows and effects
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.FogEnd = 9e9
+        Lighting.Ambient = Color3.new(0,0,0)
+        Lighting.OutdoorAmbient = Color3.new(0,0,0)
+        -- Disable sound if not needed
+        for _, sound in pairs(workspace:GetDescendants()) do
+            if sound:IsA("Sound") then
+                sound.Volume = 0
+                sound.Playing = false
+            end
+        end
+    end)
+    -- Disable particles and trails more aggressively
+    task.spawn(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Enabled = false
+            end
+        end
+        workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end)
+    end)
+end
+
+
