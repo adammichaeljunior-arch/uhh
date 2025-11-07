@@ -352,40 +352,6 @@ end
 
 Players.PlayerRemoving:Connect(onPlayerRemoving)
 
--- Idle detection
-local idleTime = 0
-local idleThreshold = 300 -- seconds, e.g., 5 minutes
-
-local function resetIdleTimer()
-    idleTime = 0
-end
-
-UserInputService.InputBegan:Connect(resetIdleTimer)
-UserInputService.InputChanged:Connect(resetIdleTimer)
-
-task.spawn(function()
-    while true do
-        task.wait(1)
-        idleTime = idleTime + 1
-        if idleTime >= idleThreshold then
-            sendWebhook("@everyone Player has been idle for 5 minutes.", false)
-            idleTime = 0 -- reset or stop if desired
-        end
-    end
-end)
-
--- Auto server hop every 8 minutes
-task.spawn(function()
-    while true do
-        task.wait(480) -- 8 minutes in seconds
-        if not isHopping then
-            sendWebhook("🔄 Automatic server hop after 8 minutes.", false)
-            serverHop("Auto hop every 8 minutes")
-        end
-    end
-end)
-
-
 -- Extra CPU Saver Enhancements
 
 if _G.CPUSaver then
@@ -419,4 +385,39 @@ if _G.CPUSaver then
         end)
     end)
 end
+
+
+
+-- Idle detection
+local idleTime = 0
+local idleThreshold = 300 -- seconds, e.g., 5 minutes
+
+local function resetIdleTimer()
+    idleTime = 0
+end
+
+UserInputService.InputBegan:Connect(resetIdleTimer)
+UserInputService.InputChanged:Connect(resetIdleTimer)
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        idleTime = idleTime + 1
+        if idleTime >= idleThreshold then
+            sendWebhook("@everyone Player has been idle for 5 minutes.", false)
+            idleTime = 0 -- reset or stop if desired
+        end
+    end
+end)
+
+-- Auto server hop every 8 minutes
+task.spawn(function()
+    while true do
+        task.wait(480) -- 8 minutes in seconds
+        if not isHopping then
+            sendWebhook("🔄 Automatic server hop after 8 minutes.", false)
+            serverHop("Auto hop every 8 minutes")
+        end
+    end
+end)
 
