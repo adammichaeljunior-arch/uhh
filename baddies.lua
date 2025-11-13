@@ -12,7 +12,7 @@ local player = Players.LocalPlayer
 -- Queue this script and the external script on teleport
 local function queueScript()
     local SRC = [[
-        loadstring(game:HttpGet("https://your-script-url-here"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/refs/heads/main/baddies.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
