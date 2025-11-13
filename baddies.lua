@@ -1,5 +1,5 @@
 -- === Your Provided Script at the Top ===
-loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/Baddies.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/mafuasahina/whatever/main/baddies"))()
 
 -- === Main Script with Server Hop, Auto-Equip "mask", and CPU Saver ===
 
