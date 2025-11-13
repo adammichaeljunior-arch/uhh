@@ -12,7 +12,7 @@ local function queueScript()
         -- Self-execute
         loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/Baddies.lua"))()
         -- Re-execute this script (replace with your script URL if needed)
-        loadstring(game:HttpGet("https://your-script-url-here"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/refs/heads/main/baddies.lua"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
