@@ -1,6 +1,6 @@
 -- Define a function to execute your initial script
 local function runInitialScript()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/refs/heads/main/baddies.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/mafuasahina/whatever/main/baddies"))()
 end
 
 -- Run it immediately
