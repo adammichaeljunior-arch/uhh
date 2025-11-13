@@ -1,18 +1,18 @@
--- === Simplified Server Hop with Self-Execution and External Script ===
+-- === Your Provided Script at the Top ===
+loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/Baddies.lua"))()
+
+-- === Main Script with Server Hop, Auto-Equip "mask", and CPU Saver ===
 
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
-
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- Queue this script and the external script on teleport
 local function queueScript()
     local SRC = [[
-        -- Self-execute
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/mafuasahina/whatever/main/baddies"))()
-        -- Re-execute this script (replace with your script URL if needed)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/refs/heads/main/baddies.lua"))()
+        loadstring(game:HttpGet("https://your-script-url-here"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
@@ -25,7 +25,7 @@ end
 if _G.CPUSaver then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        game:GetService("RunService"):Set3dRenderingEnabled(false)
+        RunService:Set3dRenderingEnabled(false)
         local Lighting = game:GetService("Lighting")
         Lighting.GlobalShadows = false
         Lighting.Brightness = 0
@@ -47,6 +47,8 @@ if _G.CPUSaver then
         end
     end)
 end
+
+local lastServerId = nil
 
 -- Server hop after 5 minutes (300 seconds)
 delay(300, function()
@@ -102,3 +104,34 @@ delay(300, function()
     print("[ServerHop] Hop to server:", target.id)
     TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
 end)
+
+-- Auto-equip any tool with "mask" in its name upon spawn/join
+local function equipMaskTools()
+    -- Wait until character is loaded
+    if not player.Character then
+        player.CharacterAdded:Wait()
+    end
+    local character = player.Character
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    -- Wait for backpack to load
+    local backpack = player:WaitForChild("Backpack")
+    -- Wait a short moment for tools to load
+    task.wait(1)
+
+    -- Find tools with "mask" in their name
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and string.find(string.lower(tool.Name), "mask") then
+            humanoid:EquipTool(tool)
+            print("Equipped tool with 'mask':", tool.Name)
+            break -- Optional: stop after first match
+        end
+    end
+end
+
+-- Run the equip function on spawn/join
+player.CharacterAdded:Connect(equipMaskTools)
+if player.Character then
+    equipMaskTools()
+end
