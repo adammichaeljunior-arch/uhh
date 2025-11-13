@@ -53,7 +53,7 @@ end
 local lastServerId = nil
 
 -- Server hop after 5 minutes
-delay(300, function()
+delay(100, function()
     queueScript()
     local function getPublicServers()
         local servers = {}
