@@ -10,7 +10,7 @@ local player = Players.LocalPlayer
 local function queueScript()
     local SRC = [[
         -- Self-execute
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/Baddies.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/mafuasahina/whatever/main/baddies"))()
         -- Re-execute this script (replace with your script URL if needed)
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/refs/heads/main/baddies.lua"))()
     ]]
