@@ -255,9 +255,8 @@ queueScript()
 
 
 ---------------------------------------------------------------------
--- === AUTO SERVERHOP EVERY 3 MINUTES ===
+-- === AUTO SERVERHOP EVERY 3 MINUTES AND ONLY JOIN SERVER WITH 4+ PLAYERS ===
 ---------------------------------------------------------------------
-
 task.spawn(function()
     while task.wait(180) do
         pcall(function()
@@ -268,11 +267,62 @@ task.spawn(function()
             )
 
             for _, s in ipairs(servers.data) do
-                if s.id ~= game.JobId and s.playing < s.maxPlayers then
+                -- Only join servers with 4 or more players
+                if s.id ~= game.JobId and s.playing >= 4 then
                     TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer)
                     break
                 end
             end
         end)
+    end
+end)
+
+-- =================== Hitbox Expander for Others ===================
+local function createHitbox(targetPart)
+    local adornment = Instance.new("BoxHandleAdornment")
+    adornment.Adornee = targetPart
+    adornment.Size = Vector3.new(4, 4, 4) -- Expand size
+    adornment.Color3 = Color3.new(1, 1, 0) -- Yellow for visibility
+    adornment.Transparency = 0.3
+    adornment.ZIndex = 10
+    adornment.AlwaysOnTop = true
+    adornment.Parent = game.Workspace
+    return adornment
+end
+
+local expandedBoxes = {}
+
+local function updateHitboxes()
+    -- Create hitboxes for new players
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer and player.Character then
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp and not expandedBoxes[player] then
+                local box = createHitbox(hrp)
+                expandedBoxes[player] = box
+            end
+        end
+    end
+    -- Keep hitboxes updated
+    for player, box in pairs(expandedBoxes) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            box.Adornee = player.Character.HumanoidRootPart
+            box.Size = Vector3.new(4, 4, 4) -- Keep size consistent
+            box.Visible = true
+        else
+            box:Destroy()
+            expandedBoxes[player] = nil
+        end
+    end
+end
+
+-- Continuously update hitboxes
+RunService.Heartbeat:Connect(updateHitboxes)
+
+-- Cleanup when players leave
+Players.PlayerRemoving:Connect(function(player)
+    if expandedBoxes[player] then
+        expandedBoxes[player]:Destroy()
+        expandedBoxes[player] = nil
     end
 end)
