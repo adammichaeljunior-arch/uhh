@@ -182,7 +182,7 @@ end)
 ---------------------------------------------------------------------
 
 local function applyMask()
-    task.wait(1)
+    task.wait(0.1)
 
     local char = LocalPlayer.Character
     local backpack = LocalPlayer:WaitForChild("Backpack")
