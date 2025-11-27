@@ -6,7 +6,8 @@ local messages = {
  	"repent094 cheap ads like this",
 	"add repent094 to buy headless accounts",
 	"cheap headless accounts -> add repent094",
-	"buying headless accounts? add repent 094"
+	"buying headless accounts? add repent 094",
+	"Want headless? add repent094"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
