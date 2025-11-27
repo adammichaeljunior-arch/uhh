@@ -2,9 +2,9 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
-    "add repent094 For Cheap Ads - 1k+ members a week!",
-	"add repent094 for source code (CHEAP)",
-	"Add repent094 for cheap headless and korblox account"
+    "add repent094 For cheap headless accounts",
+ 	"repent094 cheap ads like this",
+	"add repent094 to buy headless accounts"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
