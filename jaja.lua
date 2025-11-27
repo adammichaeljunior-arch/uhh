@@ -4,7 +4,9 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25i
 local messages = {
     "add repent094 For cheap headless accounts",
  	"repent094 cheap ads like this",
-	"add repent094 to buy headless accounts"
+	"add repent094 to buy headless accounts",
+	"cheap headless accounts -> add repent094",
+	"buying headless accounts? add repent 094"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
