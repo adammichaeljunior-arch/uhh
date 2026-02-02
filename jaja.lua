@@ -2,12 +2,12 @@
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25iG9fUAoY63CE5uYRqpKNeNz5HJoS0jTH0X4CRpXkS2hJqBk6xn8KLq1yNu_BHxI"
 
 local messages = {
- 	"Selling headless account",
-	"Add repent094 to buy",
-	"DM repent094 if interested in headless",
-	"selling cheap headless account",
-	"js add repent094 to buy",
-	"Add repent094 on blue to buy"
+ 	"gg/lowsy for egirls",
+	"cnc in /lowsy",
+	"free nitro in /lowsy",
+	"shes on cam in /lowsy",
+	"cutsgns in /lowsy",
+	"free rbx in /lowsy"
 }
 local chatDelay = 2.5
 local tpDelay = 2.5
