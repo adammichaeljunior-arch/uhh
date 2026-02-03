@@ -4,6 +4,9 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1423446494152884295/rip25i
 local messages = {
  	"gg/lowsy for egirls",
 	"cnc in /lowsy",
+	"ekittens in gg/lowsy",
+	"best com /lowsy",
+	"best age pIyers in /lowsy",
 	"free nitro in /lowsy",
 	"shes on cam in /lowsy",
 	"cutsgns in /lowsy",
