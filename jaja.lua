@@ -12,7 +12,7 @@ local messages = {
 	"cutsgns in /lowsy",
 	"free rbx in /lowsy"
 }
-local chatDelay = 2.5
+local chatDelay = 4
 local tpDelay = 2.5
 local overlayDelay = 3 -- seconds before showing overlay
 
